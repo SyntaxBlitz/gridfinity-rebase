@@ -1,10 +1,16 @@
 import { Shape } from "three";
-import { getShapeBoundingBoxCentroid } from "./hull-utils.ts";
+import { getShapeBoundingBoxCentroid, RotationType } from "./hull-utils.ts";
 
+// @ts-expect-error
 import OpenSCAD from "./openscad.js";
-OpenSCAD;
 
-export const generateScadForShapes = (shapes: Shape[], zMin: number) => {
+export const generateScadForShapes = (
+  shapes: Shape[],
+  zMin: number,
+  rotation: {
+    type: RotationType;
+  }
+) => {
   const centers = shapes.map((shape) => {
     return getShapeBoundingBoxCentroid(shape);
   });
@@ -24,7 +30,7 @@ module preferred_bottom() {
 
 union() {
     difference() {
-        import("/toFix.stl");
+        ${rotateSCADCodeForRotation(rotation.type)} import("/toFix.stl");
         
 ${centers
   .map(
@@ -44,7 +50,22 @@ ${centers
 `;
 };
 
-// const rotateCodeForRotation
+const rotateSCADCodeForRotation = (type: RotationType): string => {
+  switch (type) {
+    case "x+":
+      return "rotate([90, 0, 0])";
+    case "x-":
+      return "rotate([-90, 0, 0])";
+    case "y+":
+      return "rotate([0, 90, 0])";
+    case "y-":
+      return "rotate([0, -90, 0])";
+    case "180":
+      return "rotate([0, 0, 180])";
+    default:
+      return "";
+  }
+};
 
 export const runOpenSCAD = async (
   scadSrc: string,

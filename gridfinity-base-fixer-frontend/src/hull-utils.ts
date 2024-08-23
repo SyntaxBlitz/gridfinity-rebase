@@ -148,13 +148,15 @@ const isHullBad = (island: Shape) => {
   );
 };
 
+export type RotationType = "original" | "x+" | "x-" | "y+" | "y-" | "180";
+
 export const getBestShapeHullsForGeometry = (
   meshGeometry: BufferGeometry
 ): {
   badness: number;
   shapes: Shape[];
   rotation: {
-    type: "original" | "x+" | "x-" | "y+" | "y-" | "180";
+    type: RotationType;
     geometry: BufferGeometry;
   };
 } => {

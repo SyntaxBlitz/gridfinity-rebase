@@ -99,7 +99,7 @@ function App() {
         sceneRef.current?.add(shapeMesh);
       });
 
-      const scadSrc = generateScadForShapes(shapes, zMin);
+      const scadSrc = generateScadForShapes(shapes, zMin, rotation);
       setScad(scadSrc);
       scadRef.current = scadSrc;
     })();
