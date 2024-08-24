@@ -1,9 +1,7 @@
 import { Shape } from "three";
 import { getShapeBoundingBoxCentroid, RotationType } from "./hull-utils.ts";
 
-// @ts-expect-error
-import OpenSCAD from "./openscad.js";
-
+// todo: get the positioning for the gold stl as well
 export const generateScadForShapes = (
   shapes: Shape[],
   zMin: number,
@@ -50,6 +48,8 @@ ${centers
 `;
 };
 
+// i thought about 'undoing' the rotation, but frankly i think it's unlikely you'll
+// have magnet hole preferences and _not_ want to have a consistent rotation
 const rotateSCADCodeForRotation = (type: RotationType): string => {
   switch (type) {
     case "x+":
@@ -72,41 +72,25 @@ export const runOpenSCAD = async (
   toFixStl: ArrayBuffer,
   goldStl: ArrayBuffer
 ) => {
-  const filename = "fixed.stl";
-
-  // Instantiate the application
-  const instance = await OpenSCAD({ noInitialRun: true });
-
-  let toWrite = scadSrc;
-  // toWrite = 'import("/toFix.stl");';
-
-  // Write a file to the filesystem
-  instance.FS.writeFile("/input.scad", toWrite);
-  instance.FS.writeFile("/gold.stl", new Uint8Array(goldStl), {}, "wb");
-  instance.FS.writeFile("/toFix.stl", new Uint8Array(toFixStl), {}, "wb");
-
-  // Run like a command-line program with arguments
-  // instance.callMain(["/input.scad", "--enable=manifold", "-o", filename]); // manifold is faster at rendering
-  console.log(1);
-  instance.callMain([
-    "/input.scad",
-    "--enable=manifold",
-    // "--enable=assimp",
-    "-o",
-    filename,
-  ]); // manifold is faster at rendering
-  console.log(2);
-
-  // Read the output 3D-model into a JS byte-array
-  const output = instance.FS.readFile("/" + filename);
-
-  // Generate a link to output 3D-model and download the output STL file
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(
-    new Blob([output], { type: "application/octet-stream" })
+  const worker = new Worker(
+    new URL("workers/scad-worker.js", import.meta.url),
+    {
+      type: "module",
+    }
   );
-  link.download = filename;
-  document.body.append(link);
-  link.click();
-  link.remove();
+  worker.postMessage({
+    scadSrc,
+    toFixStl,
+    goldStl,
+  });
+
+  worker.onmessage = (e) => {
+    // Generate a link to output 3D-model and download the output STL file
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(e.data);
+    link.download = "fixed.stl";
+    document.body.append(link);
+    link.click();
+    link.remove();
+  };
 };
