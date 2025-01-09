@@ -84,13 +84,13 @@ export const runOpenSCAD = async (
     goldStl,
   });
 
-  worker.onmessage = (e) => {
+  worker.onmessage = async (e) => {
     // Generate a link to output 3D-model and download the output STL file
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(e.data);
-    link.download = "fixed.stl";
-    document.body.append(link);
-    link.click();
-    link.remove();
+    const blob = new Blob([e.data], { type: "application/octet-stream" });
+    // @ts-expect-error
+    const handle = await window.showSaveFilePicker();
+    const writable = await handle.createWritable();
+    await writable.write(blob);
+    await writable.close();
   };
 };
