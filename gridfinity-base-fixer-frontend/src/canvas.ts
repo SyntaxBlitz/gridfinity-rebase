@@ -71,11 +71,12 @@ const clearScene = (scene: THREE.Scene) => {
 };
 
 export const useRenderInputFile = (
-  inputFile: File | null,
-  sceneRef: React.RefObject<THREE.Scene | null>
+  inputBlob: Blob | null,
+  sceneRef: React.RefObject<THREE.Scene | null>,
+  gridOffset: boolean = false
 ) => {
   useEffect(() => {
-    if (!inputFile) {
+    if (!inputBlob) {
       sceneRef.current && clearScene(sceneRef.current);
       return;
     }
@@ -83,25 +84,55 @@ export const useRenderInputFile = (
     let aborted = false;
 
     (async () => {
-      const inputFileBuffer = await inputFile.arrayBuffer();
-
-      const inputFileBlob = new Blob([inputFileBuffer], {
-        type: "application/octet-stream",
-      });
-      const inputFileBlobUrl = URL.createObjectURL(inputFileBlob);
+      const inputFileBlobUrl = URL.createObjectURL(inputBlob);
       const meshGeometry = await loadSTLGeometry(inputFileBlobUrl);
 
       if (aborted) return;
       sceneRef.current && clearScene(sceneRef.current);
 
-      const mesh = new THREE.Mesh(
-        meshGeometry,
-        new THREE.MeshStandardMaterial({
-          color: 0x9575cd,
-          metalness: 0,
-          roughness: 0.5,
-        })
-      );
+      // be super cool to do a view-space peek through circle on the cursor
+
+      const wireframe = true;
+
+      if (wireframe) {
+        const mesh = new THREE.Mesh(
+          meshGeometry,
+          new THREE.MeshStandardMaterial({
+            // color: 0x9575cd,
+            color: 0xd1c4e9,
+            metalness: 0.2,
+            roughness: 0.5,
+            transparent: true,
+            opacity: 0.8,
+            polygonOffset: true,
+            polygonOffsetFactor: 1,
+            polygonOffsetUnits: 1,
+          })
+        );
+
+        sceneRef.current?.add(mesh);
+        sceneRef.current?.add(
+          new THREE.LineSegments(
+            new THREE.EdgesGeometry(meshGeometry),
+            new THREE.LineBasicMaterial({
+              color: 0x000000,
+              // transparent: true,
+              // opacity: 0.9,
+            })
+          )
+        );
+      } else {
+        const mesh = new THREE.Mesh(
+          meshGeometry,
+          new THREE.MeshStandardMaterial({
+            color: 0x9575cd,
+            metalness: 0.2,
+            roughness: 0.5,
+          })
+        );
+
+        sceneRef.current?.add(mesh);
+      }
 
       meshGeometry.computeBoundingBox();
 
@@ -118,10 +149,18 @@ export const useRenderInputFile = (
       camera.zoom = 1;
 
       const light = new THREE.DirectionalLight(0xffffff, 2);
-      light.position.set(0, 0, 10);
+      light.position.set(50, 50, meshHeight + 50);
+      light.lookAt(0, 0, 0);
+      sceneRef.current?.add(light);
+
+      // realized it's pretty useful to be able to see the bottom lol
+      const light2 = new THREE.DirectionalLight(0xffffff, 1);
+      light2.position.set(30, -30, -50);
+      light2.lookAt(0, 0, 0);
+      sceneRef.current?.add(light2);
 
       const ambientLight = new THREE.AmbientLight(0xffffff);
-      ambientLight.intensity = 1;
+      ambientLight.intensity = 0.8;
       sceneRef.current?.add(ambientLight);
 
       const maxX = Math.max(
@@ -136,18 +175,23 @@ export const useRenderInputFile = (
       const maxRadius = Math.sqrt(maxX ** 2 + maxY ** 2);
 
       // add a cute grid at the ground plane
-      const UNDER_PLANE_SIZE = maxRadius * 2 * 3;
       const SPACING = 42;
+      const UNDER_PLANE_SIZE =
+        Math.ceil((maxRadius * 2 * 3) / SPACING) * SPACING;
       const grid = new THREE.GridHelper(
         UNDER_PLANE_SIZE,
         UNDER_PLANE_SIZE / SPACING
         // 0x000000,
-        // 0x000000
+        // 0xff0000
       );
       grid.material.opacity = 0.2;
       grid.material.transparent = true;
       grid.position.z = -0.5;
       grid.rotation.x = Math.PI / 2;
+      if (gridOffset) {
+        grid.position.x = SPACING / 2;
+        grid.position.y = SPACING / 2;
+      }
 
       sceneRef.current?.add(grid);
 
@@ -204,13 +248,10 @@ export const useRenderInputFile = (
       if (sceneRef.current) {
         // sceneRef.current.fog = new THREE.Fog(0xffffff, 1, 1000);
       }
-
-      sceneRef.current?.add(mesh);
-      sceneRef.current?.add(light);
     })();
 
     return () => {
       aborted = true;
     };
-  }, [inputFile]);
+  }, [inputBlob]);
 };

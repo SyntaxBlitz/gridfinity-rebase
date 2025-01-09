@@ -1,10 +1,13 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import "./App.css";
 
 import { Box, Button, LinearProgress, Stack } from "@mui/material";
 
+import * as idb from "idb";
+
 // import { ConvexHull } from "three/examples/jsm/math/ConvexHull.js";
 import { useOrbitCanvas, useRenderInputFile } from "./canvas.ts";
+import { useLoadInputFileBlob } from "./file-utils.ts";
 import {
   getBestShapeHullsForGeometry,
   getZMinForGeometry,
@@ -24,6 +27,19 @@ const loadFileAsBlob = async (filename: string): Promise<Blob> => {
   return blob;
 };
 
+const openDb = async () => {
+  return await idb.openDB("gridfinity-remag", 5, {
+    upgrade(db) {
+      if (!db.objectStoreNames.contains("files")) {
+        db.createObjectStore("files");
+      }
+    },
+  });
+};
+
+let loadedGold = false;
+let abortGoldLoad = false;
+
 function App() {
   const [scad, setScad] = useState<string | null>(null);
 
@@ -31,7 +47,9 @@ function App() {
   const goldInputRef = useRef<HTMLInputElement>(null);
 
   const [toFixInputFile, setToFixInputFile] = useState<File | null>(null);
+  const [toFixInputBlob, setToFixInputBlob] = useState<Blob | null>(null);
   const [goldInputFile, setGoldInputFile] = useState<File | null>(null);
+  const [goldInputBlob, setGoldInputBlob] = useState<Blob | null>(null);
 
   const [scadLoading, setScadLoading] = useState<boolean>(false);
   const [scadError, setScadError] = useState<string[] | null>(null);
@@ -53,17 +71,75 @@ function App() {
   );
 
   useRenderInputFile(toFixInputFile, toFixSceneRef);
+  useLoadInputFileBlob(toFixInputFile, setToFixInputBlob);
   useRenderInputFile(goldInputFile, goldSceneRef);
+  useLoadInputFileBlob(goldInputFile, setGoldInputBlob);
 
-  const run = useCallback(async () => {
-    if (!toFixInputFile || !goldInputFile) {
+  useEffect(() => {
+    if (goldInputFile !== null) {
+      abortGoldLoad = true;
+    }
+  }, [goldInputFile]);
+
+  useEffect(() => {
+    (async () => {
+      if (!goldInputFile) {
+        return;
+      }
+
+      const goldBuffer = await goldInputFile.arrayBuffer();
+      const goldBlob = new Blob([goldBuffer], {
+        type: "application/octet-stream",
+      });
+
+      // store in indexeddb
+      const db = await openDb();
+
+      const tx = db.transaction("files", "readwrite");
+
+      tx.store.put(goldBlob, "gold.stl");
+
+      await tx.done;
+
+      // console.log("stored gold.stl in indexeddb");
+    })();
+  }, [goldInputFile]);
+
+  useEffect(() => {
+    if (loadedGold) {
       return;
     }
 
-    const toFix = await toFixInputFile.arrayBuffer();
+    (async () => {
+      const db = await openDb();
+
+      // just to test aborting. though ig should go below the db.get
+      // await new Promise((resolve) => setTimeout(resolve, 10000));
+
+      const blob = await db.get("files", "gold.stl");
+
+      if (!blob) {
+        return;
+      }
+
+      if (abortGoldLoad) {
+        return;
+      }
+
+      setGoldInputFile(new File([blob], "gold.stl"));
+
+      loadedGold = true;
+    })();
+  }, [setGoldInputFile]);
+
+  const run = useCallback(async () => {
+    if (!toFixInputFile || !toFixInputBlob || !goldInputBlob) {
+      console.log({ toFixInputFile, toFixInputBlob, goldInputBlob });
+      return;
+    }
+
     const toFixName = toFixInputFile.name;
-    const toFixBlob = new Blob([toFix], { type: "application/octet-stream" });
-    const toFixBlobUrl = URL.createObjectURL(toFixBlob);
+    const toFixBlobUrl = URL.createObjectURL(toFixInputBlob);
 
     await (async () => {
       // const meshGeometry = await loadSTLGeometry("gf-zack-1.stl");
@@ -85,10 +161,15 @@ function App() {
     setScadLoading(true);
     setScadError(null);
 
-    const goldBuffer = await goldInputFile.arrayBuffer();
+    const toFixBuffer = await toFixInputBlob.arrayBuffer();
+    const goldBuffer = await goldInputBlob.arrayBuffer();
 
     try {
-      const blobUrl = await runOpenSCAD(scadRef.current!, toFix, goldBuffer);
+      const blobUrl = await runOpenSCAD(
+        scadRef.current!,
+        toFixBuffer,
+        goldBuffer
+      );
 
       const link = document.createElement("a");
       link.href = blobUrl;
@@ -99,13 +180,20 @@ function App() {
       document.body.append(link);
       link.click();
       link.remove();
-    } catch (e) {
+    } catch (e: any) {
       setScadError(e);
     } finally {
       setScadLoading(false);
     }
     // await runOpenSCAD(scad!, cube, cube);
-  }, [toFixInputFile, goldInputFile, setScadLoading, setScadError, setScad]);
+  }, [
+    toFixInputFile,
+    toFixInputBlob,
+    goldInputBlob,
+    setScadLoading,
+    setScadError,
+    setScad,
+  ]);
 
   return (
     <Stack width={960} margin="auto" spacing={2} alignItems="center" py={6}>

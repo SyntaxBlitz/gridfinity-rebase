@@ -1,0 +1,8 @@
+- STL preview of the final result?
+- automatically start processing asap
+- try harder to find a progress bar
+- automatically find a grid in gold
+  - warn if multiple
+  - even the rotation would be reasonable
+- maybe avoid saving gold if too big? not a huge deal since it's async now
+- show the identified bases
