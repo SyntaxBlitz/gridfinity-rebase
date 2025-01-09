@@ -67,34 +67,31 @@ const rotateSCADCodeForRotation = (type: RotationType): string => {
   }
 };
 
-export const runOpenSCAD = async (
+export const runOpenSCAD = (
   scadSrc: string,
-  toFixName: string,
   toFixStl: ArrayBuffer,
   goldStl: ArrayBuffer
 ) => {
-  const worker = new Worker(
-    new URL("workers/scad-worker.js", import.meta.url),
-    {
-      type: "module",
-    }
-  );
-  worker.postMessage({
-    scadSrc,
-    toFixStl,
-    goldStl,
+  return new Promise<string>((resolve, reject) => {
+    const worker = new Worker(
+      new URL("workers/scad-worker.js", import.meta.url),
+      {
+        type: "module",
+      }
+    );
+    worker.postMessage({
+      scadSrc,
+      toFixStl,
+      goldStl,
+    });
+
+    worker.onmessage = (e) => {
+      if (e.data.type === "error") {
+        reject(e.data.messages);
+        return;
+      }
+
+      resolve(URL.createObjectURL(e.data.blob));
+    };
   });
-
-  worker.onmessage = (e) => {
-    // Generate a link to output 3D-model and download the output STL file
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(e.data);
-
-    const fixedName = toFixName.replace(/\.stl$/, "-remag.stl");
-    link.download = fixedName;
-
-    document.body.append(link);
-    link.click();
-    link.remove();
-  };
 };

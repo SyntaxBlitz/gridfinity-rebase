@@ -1,19 +1,21 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import "./App.css";
 
-import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { Box, Button, LinearProgress, Stack } from "@mui/material";
 
 // import { ConvexHull } from "three/examples/jsm/math/ConvexHull.js";
+import { useOrbitCanvas, useRenderInputFile } from "./canvas.ts";
 import {
   getBestShapeHullsForGeometry,
   getZMinForGeometry,
+  RotationType,
 } from "./hull-utils.ts";
 import { loadSTLGeometry } from "./mesh-utils.ts";
 import { generateScadForShapes, runOpenSCAD } from "./scad-utils.ts";
 
-const CANVAS_WIDTH = 1280;
-const CANVAS_HEIGHT = 720;
+// todo nice to make this dynamic
+const CANVAS_WIDTH = 420;
+const CANVAS_HEIGHT = 420;
 const RATIO = CANVAS_WIDTH / CANVAS_HEIGHT;
 
 const loadFileAsBlob = async (filename: string): Promise<Blob> => {
@@ -23,60 +25,43 @@ const loadFileAsBlob = async (filename: string): Promise<Blob> => {
 };
 
 function App() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [scad, setScad] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const sceneRef = useRef<THREE.Scene | null>(null);
+
+  const toFixInputRef = useRef<HTMLInputElement>(null);
+  const goldInputRef = useRef<HTMLInputElement>(null);
+
+  const [toFixInputFile, setToFixInputFile] = useState<File | null>(null);
+  const [goldInputFile, setGoldInputFile] = useState<File | null>(null);
+
+  const [scadLoading, setScadLoading] = useState<boolean>(false);
+  const [scadError, setScadError] = useState<string[] | null>(null);
+
+  const [detections, setDetections] = useState<null | {
+    shapeCount: number;
+    rotation: RotationType;
+  }>(null);
+
   const scadRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    if (!canvasRef.current) {
+  const { canvasRef: toFixCanvasRef, sceneRef: toFixSceneRef } = useOrbitCanvas(
+    CANVAS_WIDTH,
+    CANVAS_HEIGHT
+  );
+  const { canvasRef: goldCanvasRef, sceneRef: goldSceneRef } = useOrbitCanvas(
+    CANVAS_WIDTH,
+    CANVAS_HEIGHT
+  );
+
+  useRenderInputFile(toFixInputFile, toFixSceneRef);
+  useRenderInputFile(goldInputFile, goldSceneRef);
+
+  const run = useCallback(async () => {
+    if (!toFixInputFile || !goldInputFile) {
       return;
     }
 
-    const canvas = canvasRef.current;
-    const scene = new THREE.Scene();
-    sceneRef.current = scene;
-    THREE.Object3D.DEFAULT_UP = new THREE.Vector3(0, 0, 1);
-    const camera = new THREE.OrthographicCamera(
-      -100,
-      100,
-      100 / RATIO,
-      -100 / RATIO,
-      0.1,
-      1000
-    );
-    const renderer = new THREE.WebGLRenderer({ canvas });
-
-    renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
-
-    camera.position.z = 5;
-
-    const controls = new OrbitControls(camera, canvas);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-
-    const animate = () => {
-      requestAnimationFrame(animate);
-      controls.update();
-      renderer.render(scene, camera);
-    };
-
-    animate();
-  }, [canvasRef.current]);
-
-  const run = async () => {
-    if (!fileInputRef.current) {
-      return;
-    }
-
-    const file = fileInputRef.current.files?.[0];
-    if (!file) {
-      return;
-    }
-
-    const toFix = await file.arrayBuffer();
-    const toFixName = file.name;
+    const toFix = await toFixInputFile.arrayBuffer();
+    const toFixName = toFixInputFile.name;
     const toFixBlob = new Blob([toFix], { type: "application/octet-stream" });
     const toFixBlobUrl = URL.createObjectURL(toFixBlob);
 
@@ -85,40 +70,99 @@ function App() {
       const meshGeometry = await loadSTLGeometry(toFixBlobUrl);
 
       const { shapes, rotation } = getBestShapeHullsForGeometry(meshGeometry);
-      const zMin = getZMinForGeometry(rotation.geometry!);
-      // const shapes = getShapeHullsForGeometry(meshGeometry);
-
-      console.log(shapes[0]);
-
-      shapes.forEach((shape) => {
-        const shapeGeometry = new THREE.ShapeGeometry(shape);
-        const shapeMaterial = new THREE.MeshBasicMaterial({
-          color: 0x3d1a96,
-          side: THREE.DoubleSide,
-        });
-        const shapeMesh = new THREE.Mesh(shapeGeometry, shapeMaterial);
-        sceneRef.current?.add(shapeMesh);
+      setDetections({
+        shapeCount: shapes.length,
+        rotation: rotation.type,
       });
+
+      const zMin = getZMinForGeometry(rotation.geometry!);
 
       const scadSrc = generateScadForShapes(shapes, zMin, rotation);
       setScad(scadSrc);
       scadRef.current = scadSrc;
     })();
 
-    const goldBlob = await loadFileAsBlob("gold.stl");
-    const gold = await goldBlob.arrayBuffer();
+    setScadLoading(true);
+    setScadError(null);
 
-    await runOpenSCAD(scadRef.current!, toFixName, toFix, gold);
+    const goldBuffer = await goldInputFile.arrayBuffer();
+
+    try {
+      const blobUrl = await runOpenSCAD(scadRef.current!, toFix, goldBuffer);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+
+      const fixedName = toFixName.replace(/\.stl$/, "-remag.stl");
+      link.download = fixedName;
+
+      document.body.append(link);
+      link.click();
+      link.remove();
+    } catch (e) {
+      setScadError(e);
+    } finally {
+      setScadLoading(false);
+    }
     // await runOpenSCAD(scad!, cube, cube);
-  };
+  }, [toFixInputFile, goldInputFile, setScadLoading, setScadError, setScad]);
 
   return (
-    <div>
-      <canvas ref={canvasRef}></canvas>
-      <pre>{scad}</pre>
-      <input type="file" ref={fileInputRef} />
-      <button onClick={run}>Run</button>
-    </div>
+    <Stack width={960} margin="auto" spacing={2} alignItems="center" py={6}>
+      <Stack direction="row" alignItems={"center"} spacing={2}>
+        <Stack spacing={2} alignItems="center">
+          <h2>File to print</h2>
+          <canvas ref={toFixCanvasRef}></canvas>
+          <input
+            type="file"
+            ref={toFixInputRef}
+            onChange={(e) => setToFixInputFile(e.target.files?.[0] ?? null)}
+          />
+        </Stack>
+        <Box>
+          <h2>+</h2>
+        </Box>
+        <Stack spacing={2} alignItems="center">
+          <h2>STL with example base</h2>
+          <canvas ref={goldCanvasRef}></canvas>
+          <input
+            type="file"
+            ref={goldInputRef}
+            onChange={(e) => setGoldInputFile(e.target.files?.[0] ?? null)}
+          />
+        </Stack>
+      </Stack>
+      {/* <pre>{scad}</pre> */}
+      <Button onClick={run}>Run</Button>
+      <Box>
+        {detections === null ? null : (
+          <>
+            {detections.rotation !== "original" ? (
+              <p>
+                Decided to rotate the model first (
+                <strong>{detections.rotation}</strong>) so that bases are flat
+                on the XY plane.
+              </p>
+            ) : null}
+            <p>
+              Detected {detections.shapeCount} base
+              {detections.shapeCount === 1 ? "" : "s"} to remag.
+            </p>
+          </>
+        )}
+      </Box>
+      {scadLoading ? (
+        <Stack spacing={1}>
+          <Box>Running remag operation. This can take some time!</Box>
+          <LinearProgress />
+        </Stack>
+      ) : null}
+      {scadError ? (
+        <Box>
+          OpenSCAD failed to run :/<pre>{scadError.join("\n")}</pre>
+        </Box>
+      ) : null}
+    </Stack>
   );
 }
 
