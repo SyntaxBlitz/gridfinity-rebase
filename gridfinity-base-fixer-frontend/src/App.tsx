@@ -76,6 +76,7 @@ function App() {
     }
 
     const toFix = await file.arrayBuffer();
+    const toFixName = file.name;
     const toFixBlob = new Blob([toFix], { type: "application/octet-stream" });
     const toFixBlobUrl = URL.createObjectURL(toFixBlob);
 
@@ -107,7 +108,7 @@ function App() {
     const goldBlob = await loadFileAsBlob("gold.stl");
     const gold = await goldBlob.arrayBuffer();
 
-    await runOpenSCAD(scadRef.current!, toFix, gold);
+    await runOpenSCAD(scadRef.current!, toFixName, toFix, gold);
     // await runOpenSCAD(scad!, cube, cube);
   };
 

@@ -69,6 +69,7 @@ const rotateSCADCodeForRotation = (type: RotationType): string => {
 
 export const runOpenSCAD = async (
   scadSrc: string,
+  toFixName: string,
   toFixStl: ArrayBuffer,
   goldStl: ArrayBuffer
 ) => {
@@ -84,13 +85,16 @@ export const runOpenSCAD = async (
     goldStl,
   });
 
-  worker.onmessage = async (e) => {
+  worker.onmessage = (e) => {
     // Generate a link to output 3D-model and download the output STL file
-    const blob = new Blob([e.data], { type: "application/octet-stream" });
-    // @ts-expect-error
-    const handle = await window.showSaveFilePicker();
-    const writable = await handle.createWritable();
-    await writable.write(blob);
-    await writable.close();
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(e.data);
+
+    const fixedName = toFixName.replace(/\.stl$/, "-remag.stl");
+    link.download = fixedName;
+
+    document.body.append(link);
+    link.click();
+    link.remove();
   };
 };
