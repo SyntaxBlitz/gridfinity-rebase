@@ -5,4 +5,7 @@
   - warn if multiple
   - even the rotation would be reasonable
 - maybe avoid saving gold if too big? not a huge deal since it's async now
-- show the identified bases
+  \*- show the identified bases
+- abort scad on reupload (or just disable reupload?)
+- garbage collect openscad so we don't oom
+  (or, i dunno, reuse it?)

@@ -158,6 +158,7 @@ export const getBestShapeHullsForGeometry = (
   rotation: {
     type: RotationType;
     geometry: BufferGeometry;
+    rotationMatrix: Matrix4;
   };
 } => {
   const rotations = [
@@ -219,6 +220,7 @@ export const getBestShapeHullsForGeometry = (
         rotation: {
           type: rotation.type as any,
           geometry: rotation.geometry,
+          rotationMatrix: rotation.rotationMatrix,
         },
       };
     }

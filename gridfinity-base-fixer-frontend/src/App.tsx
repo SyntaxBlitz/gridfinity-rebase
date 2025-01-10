@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import "./App.css";
 
-import { Box, Button, LinearProgress, Stack } from "@mui/material";
+import { Alert, Box, Button, LinearProgress, Stack } from "@mui/material";
 
 import * as idb from "idb";
+import * as THREE from "three";
+
+import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
+import { Font, FontLoader } from "three/addons/loaders/FontLoader.js";
 
 // import { ConvexHull } from "three/examples/jsm/math/ConvexHull.js";
 import { useOrbitCanvas, useRenderInputFile } from "./canvas.ts";
@@ -146,6 +150,80 @@ function App() {
       const meshGeometry = await loadSTLGeometry(toFixBlobUrl);
 
       const { shapes, rotation } = getBestShapeHullsForGeometry(meshGeometry);
+
+      const openSans = await new Promise<Font>((resolve) => {
+        new FontLoader().load("open-sans.json", resolve);
+      });
+
+      shapes.forEach((shape, i) => {
+        const shapeGeometry = new THREE.ShapeGeometry(shape);
+        const zMin = getZMinForGeometry(rotation.geometry!);
+
+        shapeGeometry.translate(0, 0, zMin);
+
+        shapeGeometry.applyMatrix4(rotation.rotationMatrix.clone().invert());
+        const shapeMaterial = new THREE.MeshBasicMaterial({
+          color: 0x3d1a96,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.8,
+          depthTest: false,
+          depthWrite: false,
+        });
+        const shapeMesh = new THREE.Mesh(shapeGeometry, shapeMaterial);
+        shapeMesh.renderOrder = 999;
+        // shapeMesh.material.transparent = true;
+        toFixSceneRef.current?.add(shapeMesh);
+
+        // todo we've massively over-imported open sans characters
+        // https://gero3.github.io/facetype.js/
+
+        // add a floating number for each one
+        const textGeo = new TextGeometry(`${i + 1}`, {
+          font: openSans,
+          size: 16,
+          height: 0.1,
+        });
+        const textMaterial = new THREE.MeshBasicMaterial({
+          color: 0xffffff,
+          depthTest: false,
+          depthWrite: false,
+          transparent: true,
+        });
+        const textMesh = new THREE.Mesh(textGeo, textMaterial);
+        textMesh.renderOrder = 1000;
+
+        const pointToCamera = () => {
+          const camera = toFixSceneRef?.current?.getObjectByName("camera");
+          if (!camera) {
+            return;
+          }
+          textMesh.quaternion.copy(camera.quaternion);
+          // textMesh.lookAt(camera.position); // this is pretty cute -- if you're near it, they'll point inward to you like crossed eyes
+          // but that's probably more distracting than anything else
+        };
+
+        pointToCamera();
+        textMesh.onBeforeRender = pointToCamera;
+
+        // center the text geometry on its x axis
+        const textCenter = new THREE.Vector3();
+        textGeo.computeBoundingBox();
+        textGeo.boundingBox!.getCenter(textCenter);
+        textGeo.translate(-textCenter.x, 0, 0);
+
+        shapeGeometry.computeBoundingBox();
+        textGeo.computeBoundingBox();
+        const shapeCenter = new THREE.Vector3();
+        shapeGeometry.boundingBox!.getCenter(shapeCenter);
+        textMesh.position.set(
+          shapeCenter.x, //- textGeo.boundingBox!.max.x / 2,
+          shapeCenter.y, //- textGeo.boundingBox!.max.y / 2,
+          shapeCenter.z + 6
+        );
+        toFixSceneRef.current?.add(textMesh);
+      });
+
       setDetections({
         shapeCount: shapes.length,
         rotation: rotation.type,
@@ -222,23 +300,23 @@ function App() {
       </Stack>
       {/* <pre>{scad}</pre> */}
       <Button onClick={run}>Run</Button>
-      <Box>
+      <Stack spacing={2} width={640}>
         {detections === null ? null : (
           <>
             {detections.rotation !== "original" ? (
-              <p>
+              <Alert severity="info">
                 Decided to rotate the model first (
                 <strong>{detections.rotation}</strong>) so that bases are flat
                 on the XY plane.
-              </p>
+              </Alert>
             ) : null}
-            <p>
+            <Alert severity="info">
               Detected {detections.shapeCount} base
               {detections.shapeCount === 1 ? "" : "s"} to remag.
-            </p>
+            </Alert>
           </>
         )}
-      </Box>
+      </Stack>
       {scadLoading ? (
         <Stack spacing={1}>
           <Box>Running remag operation. This can take some time!</Box>
