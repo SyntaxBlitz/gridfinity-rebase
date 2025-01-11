@@ -91,7 +91,7 @@ function Symbol({ symbol }: { symbol: string }) {
         flexDirection: 'row',
 
         // padding kinda random
-        [`@container (max-width: ${CANVAS_WIDTH * 3 + 100}px)`]: {
+        [`@container (max-width: ${CANVAS_WIDTH * 3 + 160}px)`]: {
           width: CANVAS_WIDTH,
           height: 'auto',
           flexDirection: 'column',
@@ -520,7 +520,7 @@ function App() {
               gap: 2,
               flexDirection: 'row',
               alignItems: 'flex-start',
-              [`@container (max-width: ${CANVAS_WIDTH * 3 + 100}px)`]: {
+              [`@container (max-width: ${CANVAS_WIDTH * 3 + 160}px)`]: {
                 flexDirection: 'column',
                 alignItems: 'center',
               },
