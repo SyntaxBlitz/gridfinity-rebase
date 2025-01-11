@@ -28,8 +28,6 @@ export const useOrbitCanvas = (canvasWidth: number, canvasHeight: number) => {
     //   1000
     // );
     const camera = new THREE.PerspectiveCamera(75, ratio, 0.1, 1000);
-    camera.name = "camera";
-    console.log({ camera }, 1);
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 
@@ -37,13 +35,16 @@ export const useOrbitCanvas = (canvasWidth: number, canvasHeight: number) => {
 
     camera.position.z = 5;
 
-    scene.add(camera);
-
     const controls = new OrbitControls(camera, canvas);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.autoRotate = true;
     controls.autoRotateSpeed = 3;
+
+    scene.userData = {
+      camera,
+      controls,
+    };
 
     scene.background = new THREE.Color(0xffffff);
 
@@ -60,14 +61,7 @@ export const useOrbitCanvas = (canvasWidth: number, canvasHeight: number) => {
 };
 
 const clearScene = (scene: THREE.Scene) => {
-  // remove all but the camera
-  const nonCameraObjects = scene.children.filter(
-    (child) => child.name !== "camera"
-  );
-
-  nonCameraObjects.forEach((object) => {
-    scene.remove(object);
-  });
+  scene.clear();
 };
 
 export const useRenderInputFile = (
@@ -136,20 +130,22 @@ export const useRenderInputFile = (
 
       meshGeometry.computeBoundingBox();
 
-      const meshHeight = meshGeometry.boundingBox?.max.z ?? 5;
-      const camera = sceneRef.current?.getObjectByName(
-        "camera"
-      ) as THREE.PerspectiveCamera;
-      camera.position.z = meshHeight * 2;
+      const meshTop = meshGeometry.boundingBox?.max.z ?? 5;
+      const minZ = meshGeometry.boundingBox?.min.z ?? 0;
+      const meshHeight = meshTop - minZ;
+      sceneRef.current?.userData.controls.reset();
+      const camera = sceneRef.current?.userData.camera;
+      // camera.position.z = meshTop * 2;
+      camera.position.z = meshHeight * 2 + minZ;
       camera.position.y = (meshGeometry.boundingBox?.max.y ?? 0) * 4;
       camera.position.x = (meshGeometry.boundingBox?.max.x ?? 0) * 4;
 
-      camera.lookAt(0, 0, meshHeight);
+      camera.lookAt(0, 0, meshTop);
 
       camera.zoom = 1;
 
       const light = new THREE.DirectionalLight(0xffffff, 2);
-      light.position.set(50, 50, meshHeight + 50);
+      light.position.set(50, 50, meshTop + 50);
       light.lookAt(0, 0, 0);
       sceneRef.current?.add(light);
 

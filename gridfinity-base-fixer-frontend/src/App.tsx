@@ -23,7 +23,6 @@ import { generateScadForShapes, runOpenSCAD } from "./scad-utils.ts";
 // todo nice to make this dynamic
 const CANVAS_WIDTH = 420;
 const CANVAS_HEIGHT = 420;
-const RATIO = CANVAS_WIDTH / CANVAS_HEIGHT;
 
 const loadFileAsBlob = async (filename: string): Promise<Blob> => {
   const response = await fetch(filename);
@@ -32,7 +31,7 @@ const loadFileAsBlob = async (filename: string): Promise<Blob> => {
 };
 
 const openDb = async () => {
-  return await idb.openDB("gridfinity-remag", 5, {
+  return await idb.openDB("gridfinity-rebase", 1, {
     upgrade(db) {
       if (!db.objectStoreNames.contains("files")) {
         db.createObjectStore("files");
@@ -194,7 +193,7 @@ function App() {
         textMesh.renderOrder = 1000;
 
         const pointToCamera = () => {
-          const camera = toFixSceneRef?.current?.getObjectByName("camera");
+          const camera = toFixSceneRef?.current?.userData.camera;
           if (!camera) {
             return;
           }
@@ -252,7 +251,7 @@ function App() {
       const link = document.createElement("a");
       link.href = blobUrl;
 
-      const fixedName = toFixName.replace(/\.stl$/, "-remag.stl");
+      const fixedName = toFixName.replace(/\.stl$/, "-rebase.stl");
       link.download = fixedName;
 
       document.body.append(link);
@@ -276,26 +275,89 @@ function App() {
   return (
     <Stack width={960} margin="auto" spacing={2} alignItems="center" py={6}>
       <Stack direction="row" alignItems={"center"} spacing={2}>
-        <Stack spacing={2} alignItems="center">
-          <h2>File to print</h2>
-          <canvas ref={toFixCanvasRef}></canvas>
+        <Box
+          position="relative"
+          sx={{
+            border: "1px solid #ddd",
+          }}
+        >
+          <Stack
+            sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+            }}
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            width="100%"
+            px={2}
+            // py={1}
+            boxSizing="border-box"
+          >
+            <h2>File to print</h2>
+
+            <Button
+              sx={{ backgroundColor: "white" }}
+              variant="outlined"
+              onClick={() => toFixInputRef.current?.click()}
+            >
+              Choose File
+            </Button>
+          </Stack>
           <input
+            className="sr-only"
             type="file"
             ref={toFixInputRef}
             onChange={(e) => setToFixInputFile(e.target.files?.[0] ?? null)}
           />
-        </Stack>
+          <canvas ref={toFixCanvasRef}></canvas>
+        </Box>
         <Box>
           <h2>+</h2>
         </Box>
-        <Stack spacing={2} alignItems="center">
-          <h2>STL with example base</h2>
-          <canvas ref={goldCanvasRef}></canvas>
-          <input
-            type="file"
-            ref={goldInputRef}
-            onChange={(e) => setGoldInputFile(e.target.files?.[0] ?? null)}
-          />
+        <Stack>
+          <Box
+            position="relative"
+            sx={{
+              border: "1px solid #ddd",
+            }}
+          >
+            <Stack
+              sx={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+              }}
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              width="100%"
+              px={2}
+              // py={1}
+              boxSizing="border-box"
+            >
+              <h2>Replacement base</h2>
+              <Button
+                sx={{ backgroundColor: "white" }}
+                variant="outlined"
+                onClick={() => goldInputRef.current?.click()}
+              >
+                Choose File
+              </Button>
+            </Stack>
+            <input
+              className="sr-only"
+              type="file"
+              ref={goldInputRef}
+              onChange={(e) => setGoldInputFile(e.target.files?.[0] ?? null)}
+            />
+            <canvas ref={goldCanvasRef}></canvas>
+          </Box>
+          <Box>
+            Or upload <strong>any</strong> Gridfinity module with a base you
+            like
+          </Box>
         </Stack>
       </Stack>
       {/* <pre>{scad}</pre> */}
@@ -312,14 +374,14 @@ function App() {
             ) : null}
             <Alert severity="info">
               Detected {detections.shapeCount} base
-              {detections.shapeCount === 1 ? "" : "s"} to remag.
+              {detections.shapeCount === 1 ? "" : "s"} to rebase.
             </Alert>
           </>
         )}
       </Stack>
       {scadLoading ? (
         <Stack spacing={1}>
-          <Box>Running remag operation. This can take some time!</Box>
+          <Box>Running rebase operation. This can take some time!</Box>
           <LinearProgress />
         </Stack>
       ) : null}

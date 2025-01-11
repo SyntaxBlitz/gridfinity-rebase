@@ -9,3 +9,4 @@
 - abort scad on reupload (or just disable reupload?)
 - garbage collect openscad so we don't oom
   (or, i dunno, reuse it?)
+- prefabs
