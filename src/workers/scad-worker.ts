@@ -20,7 +20,8 @@ const initializeInstance = () => {
         // TODO move this to another bucket lol
         return 'https://noggin-run-inputs-dev-tja.rgdata.net/openscad.wasm';
       } else {
-        return '/src/openscad.wasm';
+        const importMetaUrl = import.meta.env.BASE_URL;
+        return `${importMetaUrl}/src/openscad.wasm`;
       }
     },
   }).then((instance: OpenSCAD) => {

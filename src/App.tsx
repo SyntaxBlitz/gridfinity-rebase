@@ -433,7 +433,10 @@ function App() {
       new Promise<Font>((resolve) => {
         // todo we've massively over-imported open sans characters
         // https://gero3.github.io/facetype.js/
-        new FontLoader().load('open-sans-numerals.json', resolve);
+        new FontLoader().load(
+          `${import.meta.env.BASE_URL}/open-sans-numerals.json`,
+          resolve
+        );
       }),
     ]);
 
