@@ -9,4 +9,4 @@ npm install
 npm run dev
 ```
 
-OpenSCAD is GPL software. `openscad.wasm` and `openscad.js` are distributed under the GPL, version 2.
+OpenSCAD is GPL software. `openscad.wasm` and `openscad.js` are distributed under the GPL, version 3.
