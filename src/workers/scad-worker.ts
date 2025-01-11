@@ -4,7 +4,7 @@ import OpenSCAD from '../openscad.js';
 let print = (_s: string) => {};
 let printErr = (_s: string) => {};
 
-let instancePromise: Promise<OpenSCAD>;
+let instancePromise: Promise<OpenSCAD> | null = null;
 let instanceUsed = false;
 
 const initializeInstance = () => {
@@ -33,7 +33,17 @@ const initializeInstance = () => {
 // hopefully it gets GC'd?
 // it was going to be a pita to actually share one instance
 //   (need custom filenames based on reqid probably)
-initializeInstance();
+
+// there isn't a great way to detect metered connections
+//   (see https://mozilla.github.io/standards-positions/#netinfo)
+// but it seems rude to load a 60MB wasm file on pageload.
+// I do think it's worth preloading, in general, but if a user finds this site on mobile,
+// they're probably not actually using the tool anyway. If they are, their first (pre-cache)
+// use can wait until interaction.
+const isOnMobile = navigator.userAgent.toLowerCase().includes('mobi');
+if (!isOnMobile) {
+  initializeInstance();
+}
 
 onmessage = async (e) => {
   return await rebase(e.data);
@@ -46,7 +56,7 @@ const rebase = async (data: {
   requestId: string;
 }) => {
   // check this before anything async to avoid race cond
-  if (instanceUsed) {
+  if (instanceUsed || instancePromise === null) {
     initializeInstance();
   } else {
     // we're allowed to use the preload instance the first time
