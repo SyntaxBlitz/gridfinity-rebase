@@ -2,6 +2,8 @@
 import OpenSCAD from '../openscad.js';
 
 onmessage = async (e) => {
+  console.log(12312341);
+
   const { scadSrc, toFixStl, goldStl } = e.data;
 
   const printStatements: string[] = [];
@@ -14,6 +16,13 @@ onmessage = async (e) => {
         noInitialRun: true,
         print: (x: string) => printStatements.push(x),
         printErr: (x: string) => errorStatements.push(x),
+
+        locateFile: function () {
+          console.log('locateFile');
+          console.log([...arguments]);
+          return '/src/openscad.wasm';
+          // return
+        },
       });
 
       instance.FS.writeFile('/input.scad', scadSrc);

@@ -1,5 +1,7 @@
-- STL preview of the final result?
-- automatically start processing asap
+\*- STL preview of the final result?
+
+\*- automatically start processing asap
+
 - try harder to find a progress bar
   - man i did try harder but even openscad-playground doesn't have one
 - automatically find a grid in gold
@@ -16,6 +18,7 @@
   - but this isn't super high-priority. i think most users have one preference, and it'll stick in their localstorage. this isn't really an 'exploratory' tool where you get to look at all the options. wrong ui for that anyway.
 
 - warn on badness
+- preload openscad.wasm (57MB, damn)
 
 - what doesn't work? (out of scope)
   - 'magnets only on corners' -- every base needs to be the same

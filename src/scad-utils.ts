@@ -80,23 +80,30 @@ export const runOpenSCAD = (
     blob: Blob | null;
     errors: string[];
   }>((resolve, reject) => {
-    const worker = new Worker(
-      new URL('workers/scad-worker.js', import.meta.url),
-      {
-        type: 'module',
-      }
-    );
-    worker.postMessage({
-      scadSrc,
-      toFixStl,
-      goldStl,
-    });
-
-    worker.onmessage = (e) => {
-      resolve({
-        blob: e.data.blob as Blob | null,
-        errors: e.data.errors as string[],
+    try {
+      const worker = new Worker(
+        new URL('workers/scad-worker.js', import.meta.url),
+        {
+          type: 'module',
+        }
+      );
+      worker.postMessage({
+        scadSrc,
+        toFixStl,
+        goldStl,
       });
-    };
+
+      worker.onmessage = (e) => {
+        resolve({
+          blob: e.data.blob as Blob | null,
+          errors: e.data.errors as string[],
+        });
+      };
+    } catch (e) {
+      resolve({
+        blob: null,
+        errors: [(e as Error).message],
+      });
+    }
   });
 };

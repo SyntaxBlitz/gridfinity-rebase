@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { Alert, Box, Button, LinearProgress, Stack } from '@mui/material';
+import { Alert, Box, Button, CircularProgress, Stack } from '@mui/material';
 
 import * as idb from 'idb';
 import * as THREE from 'three';
@@ -107,6 +107,8 @@ function Dropzone({ text, shown }: { text: string; shown: boolean }) {
 
 let loadedGold = false;
 let abortGoldLoad = false;
+
+let lastAbortRun: null | { aborted: boolean } = null;
 
 function App() {
   const toFixInputRef = useRef<HTMLInputElement>(null);
@@ -218,7 +220,13 @@ function App() {
       return;
     }
 
-    // TODO abort running workers
+    // TODO actually abort running workers so they're not spinning
+    if (lastAbortRun) {
+      lastAbortRun.aborted = true;
+    }
+
+    let thisAbortRun = { aborted: false };
+    lastAbortRun = thisAbortRun;
 
     setScadLoading(true);
     setScadError(null);
@@ -226,95 +234,98 @@ function App() {
 
     const toFixBlobUrl = URL.createObjectURL(toFixInputBlob);
 
-    await (async () => {
-      // const meshGeometry = await loadSTLGeometry("gf-zack-1.stl");
-      const meshGeometry = await loadSTLGeometry(toFixBlobUrl);
+    // todo this is silly, a remnant from hacking -- should not load the font every time
+    const [meshGeometry, openSans] = await Promise.all([
+      loadSTLGeometry(toFixBlobUrl),
 
-      const { shapes, rotation } = getBestShapeHullsForGeometry(meshGeometry);
-
-      const openSans = await new Promise<Font>((resolve) => {
-        new FontLoader().load('open-sans.json', resolve);
-      });
-
-      shapes.forEach((shape, i) => {
-        const shapeGeometry = new THREE.ShapeGeometry(shape);
-        const zMin = getZMinForGeometry(rotation.geometry!);
-
-        shapeGeometry.translate(0, 0, zMin);
-
-        shapeGeometry.applyMatrix4(rotation.rotationMatrix.clone().invert());
-        const shapeMaterial = new THREE.MeshBasicMaterial({
-          color: 0x3d1a96,
-          side: THREE.DoubleSide,
-          transparent: true,
-          opacity: 0.8,
-          depthTest: false,
-          depthWrite: false,
-        });
-        const shapeMesh = new THREE.Mesh(shapeGeometry, shapeMaterial);
-        shapeMesh.renderOrder = 999;
-        // shapeMesh.material.transparent = true;
-        toFixSceneRef.current?.add(shapeMesh);
-
+      new Promise<Font>((resolve) => {
         // todo we've massively over-imported open sans characters
         // https://gero3.github.io/facetype.js/
+        new FontLoader().load('open-sans.json', resolve);
+      }),
+    ]);
 
-        // add a floating number for each one
-        const textGeo = new TextGeometry(`${i + 1}`, {
-          font: openSans,
-          size: 16,
-          depth: 0.1,
-        });
-        const textMaterial = new THREE.MeshBasicMaterial({
-          color: 0xffffff,
-          depthTest: false,
-          depthWrite: false,
-          transparent: true,
-        });
-        const textMesh = new THREE.Mesh(textGeo, textMaterial);
-        textMesh.renderOrder = 1000;
+    // his seems fast enough. we could do it in a worker if it were causing problems
+    const { shapes, rotation } = getBestShapeHullsForGeometry(meshGeometry);
 
-        const pointToCamera = () => {
-          const camera = toFixSceneRef?.current?.userData.camera;
-          if (!camera) {
-            return;
-          }
-          textMesh.quaternion.copy(camera.quaternion);
-          // textMesh.lookAt(camera.position); // this is pretty cute -- if you're near it, they'll point inward to you like crossed eyes
-          // but that's probably more distracting than anything else
-        };
-
-        pointToCamera();
-        textMesh.onBeforeRender = pointToCamera;
-
-        // center the text geometry on its x axis
-        const textCenter = new THREE.Vector3();
-        textGeo.computeBoundingBox();
-        textGeo.boundingBox!.getCenter(textCenter);
-        textGeo.translate(-textCenter.x, 0, 0);
-
-        shapeGeometry.computeBoundingBox();
-        textGeo.computeBoundingBox();
-        const shapeCenter = new THREE.Vector3();
-        shapeGeometry.boundingBox!.getCenter(shapeCenter);
-        textMesh.position.set(
-          shapeCenter.x, //- textGeo.boundingBox!.max.x / 2,
-          shapeCenter.y, //- textGeo.boundingBox!.max.y / 2,
-          shapeCenter.z + 6
-        );
-        toFixSceneRef.current?.add(textMesh);
-      });
-
-      setDetections({
-        shapeCount: shapes.length,
-        rotation: rotation.type,
-      });
-
+    shapes.forEach((shape, i) => {
+      const shapeGeometry = new THREE.ShapeGeometry(shape);
       const zMin = getZMinForGeometry(rotation.geometry!);
 
-      const scadSrc = generateScadForShapes(shapes, zMin, rotation);
-      scadRef.current = scadSrc;
-    })();
+      shapeGeometry.translate(0, 0, zMin);
+
+      shapeGeometry.applyMatrix4(rotation.rotationMatrix.clone().invert());
+      const shapeMaterial = new THREE.MeshBasicMaterial({
+        color: 0x3d1a96,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.8,
+        depthTest: false,
+        depthWrite: false,
+      });
+      const shapeMesh = new THREE.Mesh(shapeGeometry, shapeMaterial);
+      shapeMesh.renderOrder = 999;
+      toFixSceneRef.current?.add(shapeMesh);
+
+      // add a floating number for each one
+      const textGeo = new TextGeometry(`${i + 1}`, {
+        font: openSans,
+        size: 16,
+        depth: 0.1,
+      });
+      const textMaterial = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        depthTest: false,
+        depthWrite: false,
+        transparent: true,
+      });
+      const textMesh = new THREE.Mesh(textGeo, textMaterial);
+      textMesh.renderOrder = 1000;
+
+      const pointToCamera = () => {
+        const camera = toFixSceneRef?.current?.userData.camera;
+        if (!camera) {
+          return;
+        }
+        textMesh.quaternion.copy(camera.quaternion);
+        // textMesh.lookAt(camera.position); // this is pretty cute -- if you're near it, they'll point inward to you like crossed eyes
+        // but that's probably more distracting than anything else
+      };
+
+      pointToCamera();
+      textMesh.onBeforeRender = pointToCamera;
+
+      // center the text geometry on its x axis
+      const textCenter = new THREE.Vector3();
+      textGeo.computeBoundingBox();
+      textGeo.boundingBox!.getCenter(textCenter);
+      textGeo.translate(-textCenter.x, 0, 0);
+
+      shapeGeometry.computeBoundingBox();
+      textGeo.computeBoundingBox();
+      const shapeCenter = new THREE.Vector3();
+      shapeGeometry.boundingBox!.getCenter(shapeCenter);
+      textMesh.position.set(
+        shapeCenter.x, //- textGeo.boundingBox!.max.x / 2,
+        shapeCenter.y, //- textGeo.boundingBox!.max.y / 2,
+        shapeCenter.z + 6
+      );
+      toFixSceneRef.current?.add(textMesh);
+    });
+
+    if (thisAbortRun.aborted) {
+      return;
+    }
+
+    setDetections({
+      shapeCount: shapes.length,
+      rotation: rotation.type,
+    });
+
+    const zMin = getZMinForGeometry(rotation.geometry!);
+
+    const scadSrc = generateScadForShapes(shapes, zMin, rotation);
+    scadRef.current = scadSrc;
 
     const toFixBuffer = await toFixInputBlob.arrayBuffer();
     const goldBuffer = await goldInputBlob.arrayBuffer();
@@ -324,6 +335,10 @@ function App() {
       toFixBuffer,
       goldBuffer
     );
+
+    if (thisAbortRun.aborted) {
+      return;
+    }
 
     setFixedBlob(blob);
     setScadError(errors);
@@ -491,10 +506,10 @@ function App() {
               ref={goldCanvasRef}
             ></canvas>
           </Box>
-          <Box>Upload any Gridfinity module with a base you like</Box>
+          <Box>Choose any Gridfinity module with a base you like</Box>
         </Stack>
         <Symbol symbol="=" />
-        <Stack>
+        <Stack alignItems="stretch" spacing={2}>
           <Box
             position="relative"
             sx={{
@@ -502,6 +517,31 @@ function App() {
               display: 'flex',
             }}
           >
+            {scadLoading ? (
+              <Stack
+                spacing={4}
+                aria-live="polite"
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexDirection: 'column',
+                  boxSizing: 'border-box',
+                  padding: 2,
+                  zIndex: 1,
+                }}
+              >
+                <Box>Calculating rebased STL. This can take some time!</Box>
+                {/* <LinearProgress /> */}
+                <CircularProgress />
+              </Stack>
+            ) : null}
             <Stack
               sx={{
                 position: 'absolute',
@@ -540,14 +580,12 @@ function App() {
               ref={fixedCanvasRef}
             ></canvas>
           </Box>
+          {fixedBlob && !showScadError && (
+            <Alert severity="success">Ready to save!</Alert>
+          )}
         </Stack>
       </Stack>
-      {scadLoading ? (
-        <Stack spacing={1} aria-live="polite">
-          <Box>Running rebase operation. This can take some time!</Box>
-          <LinearProgress />
-        </Stack>
-      ) : null}
+
       {showScadError ? (
         <Box sx={{ maxWidth: 960 }} aria-live="polite">
           <Alert severity="error">OpenSCAD encountered an error :/</Alert>
