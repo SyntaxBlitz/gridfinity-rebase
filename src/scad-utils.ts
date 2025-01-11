@@ -55,7 +55,7 @@ union() {
 
 ${centers
   .map(
-    (center, i) =>
+    (center) =>
       `        translate([${center[0]}, ${center[1]}, ${zMin}]) simple_cut();`
   )
   .join('\n')}
@@ -63,7 +63,7 @@ ${centers
 
 ${centers
   .map(
-    (center, i) =>
+    (center) =>
       `    translate([${center[0]}, ${center[1]}, ${zMin}]) preferred_bottom();`
   )
   .join('\n')}
@@ -103,7 +103,7 @@ export const runOpenSCAD = (
   return new Promise<{
     blob: Blob | null;
     errors: string[];
-  }>((resolve, reject) => {
+  }>((resolve) => {
     try {
       if (!scadWorker) {
         throw new Error('SCAD worker not initialized');

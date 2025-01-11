@@ -1,8 +1,8 @@
 // @ts-expect-error
 import OpenSCAD from '../openscad.js';
 
-let print = (s: string) => {};
-let printErr = (s: string) => {};
+let print = (_s: string) => {};
+let printErr = (_s: string) => {};
 
 let instancePromise: Promise<OpenSCAD>;
 let instanceUsed = false;
@@ -10,8 +10,8 @@ let instanceUsed = false;
 const initializeInstance = () => {
   instancePromise = OpenSCAD({
     noInitialRun: true,
-    print: (x: string) => print(x),
-    printErr: (x: string) => printErr(x),
+    print: (s: string) => print(s),
+    printErr: (s: string) => printErr(s),
 
     locateFile: function () {
       if (self.location.origin === 'https://gridfinity.tools') {
