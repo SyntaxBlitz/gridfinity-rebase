@@ -25,3 +25,4 @@ dist-ssr
 
 
 *.stl
+!public/default-gold-refined-3.stl

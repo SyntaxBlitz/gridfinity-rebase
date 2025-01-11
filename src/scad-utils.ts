@@ -17,11 +17,19 @@ export const generateScadForShapes = (
   zMin: number,
   rotation: {
     type: RotationType;
+  },
+  goldShape: Shape,
+  goldZMin: number,
+  goldRotation: {
+    type: RotationType;
   }
 ) => {
   const centers = shapes.map((shape) => {
     return getShapeBoundingBoxCentroid(shape);
   });
+
+  const goldCenter = getShapeBoundingBoxCentroid(goldShape);
+  console.log({ goldCenter });
 
   return `
 module simple_cut() {
@@ -31,7 +39,13 @@ module simple_cut() {
 
 module preferred_bottom() {
     intersection() {
-        import("/gold.stl");
+        translate([-1 * ${goldCenter[0]},
+                   -1 * ${goldCenter[1]},
+                   -1 * ${goldZMin}]) {
+          ${rotateSCADCodeForRotation(goldRotation.type)} {
+            import("/gold.stl");
+          }
+        }
         simple_cut();
     }
 }
@@ -39,7 +53,7 @@ module preferred_bottom() {
 union() {
     difference() {
         ${rotateSCADCodeForRotation(rotation.type)} import("/toFix.stl");
-        
+
 ${centers
   .map(
     (center, i) =>
@@ -47,7 +61,7 @@ ${centers
   )
   .join('\n')}
     }
-    
+
 ${centers
   .map(
     (center, i) =>
@@ -55,6 +69,7 @@ ${centers
   )
   .join('\n')}
 }
+
 `;
 };
 

@@ -1,4 +1,4 @@
-import { Box, Button, Stack } from '@mui/material';
+import { Box, Button, Link, Stack } from '@mui/material';
 import { useState } from 'react';
 import { TipButton } from './tip-button/TipButton.tsx';
 
@@ -12,12 +12,26 @@ export function Intro() {
         maxWidth: 'calc(min(960px, 80%))',
       }}
     >
+      <Box>
+        <Link
+          href="https://gridfinity.tools/"
+          sx={{
+            color: '#777',
+            textDecoration: 'none',
+            '&:hover': {
+              textDecoration: 'underline',
+            },
+          }}
+        >
+          gridfinity.tools/
+        </Link>
+      </Box>
       <Stack
         alignItems="center"
         direction="row"
         justifyContent="space-between"
-        pb={2}
         gap={2}
+        pb={2}
       >
         <h1
           style={{
@@ -29,42 +43,40 @@ export function Intro() {
 
         <TipButton />
       </Stack>
+
       <Box>
         Once you have a magnet strategy you're happy with — whether you're
         gluing them, press-fitting them, capturing them, or just omitting them
         altogether — you'll want all of your printed modules to use the same
         strategy.
       </Box>
-
       <Box>
         This tool automatically finds bases in the STL file you need to print,
         then <strong>cuts them out and replaces them</strong> with your
         preferred base.
       </Box>
-
       <Box>
         CAD operations are performed in your browser using the web build of{' '}
         <a href="https://gridfinity.tools/#openscad">OpenSCAD</a> (no files
         leave your machine).
       </Box>
-
       <Box>
         I'm <a href="https://timothyaveni.com">Tim</a>, and I built this
         software, which is free and open-source (
         <a href="https://github.com/syntaxblitz/gridfinity-rebase">
           GitHub link
         </a>
-        ). I hope you find it helpful! You can find links to other tools at{' '}
-        <a href="https://gridfinity.tools">gridfinity.tools</a>.
+        ). I hope you find it helpful!
+        {/* not sure this is the right spot for this plug */}
+        {/* You can find links to other tools at{' '}
+        <a href="https://gridfinity.tools">gridfinity.tools</a>. */}
       </Box>
-
       <Button
         onClick={() => setMoreInfoExpanded(!moreInfoExpanded)}
         sx={{ alignSelf: 'flex-end' }}
       >
         More info ↓
       </Button>
-
       <Stack
         spacing={2}
         sx={{
