@@ -1,5 +1,5 @@
 :root {
-  font-family: 'Blinker', sans-serif;
+  font-family: 'Exo 2', sans-serif;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -11,6 +11,20 @@ body {
   margin: 0;
   padding: 0;
 }
+
+h1,
+h2,
+h3,
+strong {
+  font-weight: 600;
+}
+
+a,
+a:visited {
+  color: #1565c0;
+}
+
+/* --- */
 
 /*
 	Improved screen reader only CSS class
@@ -75,3 +89,5 @@ body {
   width: auto !important;
   white-space: normal !important;
 }
+
+/* --- */

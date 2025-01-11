@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { Alert, Box, Button, CircularProgress, Stack } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  createTheme,
+  Stack,
+  ThemeProvider,
+} from '@mui/material';
 
 import * as idb from 'idb';
 import * as THREE from 'three';
@@ -16,6 +24,7 @@ import {
   getZMinForGeometry,
   RotationType,
 } from './hull-utils.ts';
+import { Intro } from './Intro.tsx';
 import { loadSTLGeometry } from './mesh-utils.ts';
 import { generateScadForShapes, runOpenSCAD } from './scad-utils.ts';
 
@@ -28,6 +37,37 @@ const loadFileAsBlob = async (filename: string): Promise<Blob> => {
   const blob = await response.blob();
   return blob;
 };
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#3d1a96',
+    },
+  },
+  typography: {
+    fontFamily: '"Exo 2", sans-serif',
+    h1: {
+      fontWeight: 600,
+      fontSize: '2rem',
+      color: '#111',
+    },
+    h2: {
+      fontWeight: 600,
+      fontSize: '1.5rem',
+      color: '#333',
+    },
+    h3: {
+      fontWeight: 600,
+      fontSize: '1.3rem',
+      color: '#333',
+    },
+    h4: {
+      fontWeight: 600,
+      fontSize: '1.1rem',
+      color: '#333',
+    },
+  },
+});
 
 const openDb = async () => {
   return await idb.openDB('gridfinity-rebase', 1, {
@@ -353,246 +393,262 @@ function App() {
     (scadError?.some((e) => e.includes('ERROR:')) ?? false);
 
   return (
-    <Stack
-      width="100%"
-      margin="auto"
-      spacing={2}
-      alignItems="center"
-      py={6}
-      sx={{ containerType: 'size' }}
-    >
-      <Stack
-        alignItems={'center'}
-        sx={{
-          gap: 2,
-          flexDirection: 'row',
-          alignItems: 'flex-start',
-          '@container (max-width: 1400px)': {
-            flexDirection: 'column',
-            alignItems: 'center',
-          },
-        }}
-      >
-        <Stack alignItems="center" spacing={2}>
-          <Box
-            position="relative"
-            sx={{
-              border: '1px solid #ddd',
-              display: 'flex',
-            }}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDraggingToFix(true);
-            }}
-            onDragLeave={() => setDraggingToFix(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              setDraggingToFix(false);
-              const file = e.dataTransfer.files[0];
-              setToFixInputFile(file);
-            }}
-          >
-            <Dropzone text="Drop a file to fix" shown={draggingToFix} />
-            <Stack
-              sx={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-              }}
-              direction="row"
-              alignItems="center"
-              justifyContent="space-between"
-              width="100%"
-              px={2}
-              // py={1}
-              boxSizing="border-box"
-            >
-              <h2>File to fix</h2>
+    <ThemeProvider theme={theme}>
+      <Box sx={{ containerType: 'size' }}>
+        <Stack width="100%" spacing={6} alignItems="center" py={6} mb={10}>
+          <Intro />
 
-              <Button
-                sx={{ backgroundColor: 'white' }}
-                variant="outlined"
-                onClick={() => toFixInputRef.current?.click()}
-              >
-                Choose File
-              </Button>
-            </Stack>
-            <input
-              className="sr-only"
-              type="file"
-              ref={toFixInputRef}
-              onChange={(e) => setToFixInputFile(e.target.files?.[0] ?? null)}
-            />
-            <canvas
-              width={CANVAS_WIDTH}
-              height={CANVAS_HEIGHT}
-              ref={toFixCanvasRef}
-            ></canvas>
-          </Box>
-          <Stack spacing={2} maxWidth={CANVAS_WIDTH} aria-live="polite">
-            {detections === null ? null : (
-              <>
-                {detections.rotation !== 'original' ? (
-                  <Alert severity="info">
-                    Decided to rotate the model first (
-                    <strong>{detections.rotation}</strong>) so that bases are
-                    flat on the XY plane.
-                  </Alert>
-                ) : null}
-                <Alert severity="info">
-                  Detected {detections.shapeCount} base
-                  {detections.shapeCount === 1 ? '' : 's'} to replace.
-                </Alert>
-              </>
-            )}
-          </Stack>
-        </Stack>
-        <Symbol symbol="+" />
-        <Stack alignItems="center" spacing={1}>
-          <Box
-            position="relative"
+          <Stack
+            alignItems={'center'}
             sx={{
-              border: '1px solid #ddd',
-              display: 'flex',
-            }}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDraggingGold(true);
-            }}
-            onDragLeave={() => setDraggingGold(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              setDraggingGold(false);
-              const file = e.dataTransfer.files[0];
-              setGoldInputFile(file);
+              gap: 2,
+              flexDirection: 'row',
+              alignItems: 'flex-start',
+              [`@container (max-width: ${CANVAS_WIDTH * 3 + 100}px)`]: {
+                flexDirection: 'column',
+                alignItems: 'center',
+              },
             }}
           >
-            <Dropzone
-              text="Drop a file with a replacement base"
-              shown={draggingGold}
-            />
-            <Stack
-              sx={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-              }}
-              direction="row"
-              alignItems="center"
-              justifyContent="space-between"
-              width="100%"
-              px={2}
-              // py={1}
-              boxSizing="border-box"
-            >
-              <h2>Replacement base</h2>
-              <Button
-                sx={{ backgroundColor: 'white' }}
-                variant="outlined"
-                onClick={() => goldInputRef.current?.click()}
-              >
-                Choose File
-              </Button>
-            </Stack>
-            <input
-              className="sr-only"
-              type="file"
-              ref={goldInputRef}
-              onChange={(e) => setGoldInputFile(e.target.files?.[0] ?? null)}
-            />
-            <canvas
-              width={CANVAS_WIDTH}
-              height={CANVAS_HEIGHT}
-              ref={goldCanvasRef}
-            ></canvas>
-          </Box>
-          <Box>Choose any Gridfinity module with a base you like</Box>
-        </Stack>
-        <Symbol symbol="=" />
-        <Stack alignItems="stretch" spacing={2}>
-          <Box
-            position="relative"
-            sx={{
-              border: '1px solid #ddd',
-              display: 'flex',
-            }}
-          >
-            {scadLoading ? (
-              <Stack
-                spacing={4}
-                aria-live="polite"
+            <Stack alignItems="center" spacing={2}>
+              <Box
+                position="relative"
                 sx={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '100%',
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                  border: '1px solid #ddd',
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexDirection: 'column',
-                  boxSizing: 'border-box',
-                  padding: 2,
-                  zIndex: 1,
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDraggingToFix(true);
+                }}
+                onDragLeave={() => setDraggingToFix(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDraggingToFix(false);
+                  const file = e.dataTransfer.files[0];
+                  setToFixInputFile(file);
                 }}
               >
-                <Box>Calculating rebased STL. This can take some time!</Box>
-                {/* <LinearProgress /> */}
-                <CircularProgress />
-              </Stack>
-            ) : null}
-            <Stack
-              sx={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-              }}
-              direction="row"
-              alignItems="center"
-              justifyContent="space-between"
-              width="100%"
-              px={2}
-              // py={1}
-              boxSizing="border-box"
-            >
-              <h2>Rebased</h2>
-              {fixedBlob && (
-                <Button
-                  // sx={{ backgroundColor: 'white' }}
-                  variant="contained"
-                  component="a"
-                  // maybe should cache this
-                  href={URL.createObjectURL(fixedBlob)}
-                  download={
-                    toFixInputFile
-                      ? toFixInputFile.name.replace(/\.stl$/, '-rebased.stl')
-                      : 'rebased.stl'
-                  }
+                <Dropzone text="Drop a file to fix" shown={draggingToFix} />
+                <Stack
+                  sx={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                  }}
+                  direction="row"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  width="100%"
+                  px={2}
+                  // py={1}
+                  boxSizing="border-box"
                 >
-                  Save
-                </Button>
+                  <h2>File to fix</h2>
+
+                  <Button
+                    sx={{ backgroundColor: 'white' }}
+                    variant="outlined"
+                    onClick={() => toFixInputRef.current?.click()}
+                  >
+                    Choose File
+                  </Button>
+                </Stack>
+                <input
+                  className="sr-only"
+                  type="file"
+                  ref={toFixInputRef}
+                  onChange={(e) =>
+                    setToFixInputFile(e.target.files?.[0] ?? null)
+                  }
+                />
+                <canvas
+                  width={CANVAS_WIDTH}
+                  height={CANVAS_HEIGHT}
+                  ref={toFixCanvasRef}
+                ></canvas>
+              </Box>
+              <Stack spacing={2} maxWidth={CANVAS_WIDTH} aria-live="polite">
+                {detections === null ? null : (
+                  <>
+                    {detections.rotation !== 'original' ? (
+                      <Alert severity="info">
+                        Decided to rotate the model first (
+                        <strong>{detections.rotation}</strong>) so that bases
+                        are flat on the XY plane.
+                      </Alert>
+                    ) : null}
+                    <Alert severity="info">
+                      Detected {detections.shapeCount} base
+                      {detections.shapeCount === 1 ? '' : 's'} to replace.
+                    </Alert>
+                  </>
+                )}
+              </Stack>
+            </Stack>
+            <Symbol symbol="+" />
+            <Stack alignItems="center" spacing={1}>
+              <Box
+                position="relative"
+                sx={{
+                  border: '1px solid #ddd',
+                  display: 'flex',
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDraggingGold(true);
+                }}
+                onDragLeave={() => setDraggingGold(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDraggingGold(false);
+                  const file = e.dataTransfer.files[0];
+                  setGoldInputFile(file);
+                }}
+              >
+                <Dropzone
+                  text="Drop a file with a replacement base"
+                  shown={draggingGold}
+                />
+                <Stack
+                  sx={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                  }}
+                  direction="row"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  width="100%"
+                  px={2}
+                  // py={1}
+                  boxSizing="border-box"
+                >
+                  <h2>Replacement base</h2>
+                  <Button
+                    sx={{ backgroundColor: 'white' }}
+                    variant="outlined"
+                    onClick={() => goldInputRef.current?.click()}
+                  >
+                    Choose File
+                  </Button>
+                </Stack>
+                <input
+                  className="sr-only"
+                  type="file"
+                  ref={goldInputRef}
+                  onChange={(e) =>
+                    setGoldInputFile(e.target.files?.[0] ?? null)
+                  }
+                />
+                <canvas
+                  width={CANVAS_WIDTH}
+                  height={CANVAS_HEIGHT}
+                  ref={goldCanvasRef}
+                ></canvas>
+              </Box>
+              <Stack spacing={0} alignItems="center">
+                <Box>Choose any Gridfinity module with a base you like.</Box>
+                <Box
+                  sx={{
+                    fontSize: 14,
+                    color: '#666',
+                  }}
+                >
+                  (I'll remember this choice for later.)
+                </Box>
+              </Stack>
+            </Stack>
+            <Symbol symbol="=" />
+            <Stack alignItems="stretch" spacing={2}>
+              <Box
+                position="relative"
+                sx={{
+                  border: '1px solid #ddd',
+                  display: 'flex',
+                }}
+              >
+                {scadLoading ? (
+                  <Stack
+                    spacing={4}
+                    aria-live="polite"
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexDirection: 'column',
+                      boxSizing: 'border-box',
+                      padding: 2,
+                      zIndex: 1,
+                    }}
+                  >
+                    <Box>Calculating rebased STL. This can take some time!</Box>
+                    {/* <LinearProgress /> */}
+                    <CircularProgress />
+                  </Stack>
+                ) : null}
+                <Stack
+                  sx={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                  }}
+                  direction="row"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  width="100%"
+                  px={2}
+                  // py={1}
+                  boxSizing="border-box"
+                >
+                  <h2>Rebased</h2>
+                  {fixedBlob && (
+                    <Button
+                      // sx={{ backgroundColor: 'white' }}
+                      variant="contained"
+                      component="a"
+                      // maybe should cache this
+                      href={URL.createObjectURL(fixedBlob)}
+                      download={
+                        toFixInputFile
+                          ? toFixInputFile.name.replace(
+                              /\.stl$/,
+                              '-rebased.stl'
+                            )
+                          : 'rebased.stl'
+                      }
+                    >
+                      Save
+                    </Button>
+                  )}
+                </Stack>
+                <canvas
+                  width={CANVAS_WIDTH}
+                  height={CANVAS_HEIGHT}
+                  ref={fixedCanvasRef}
+                ></canvas>
+              </Box>
+              {fixedBlob && !showScadError && (
+                <Alert severity="success">Ready to save!</Alert>
               )}
             </Stack>
-            <canvas
-              width={CANVAS_WIDTH}
-              height={CANVAS_HEIGHT}
-              ref={fixedCanvasRef}
-            ></canvas>
-          </Box>
-          {fixedBlob && !showScadError && (
-            <Alert severity="success">Ready to save!</Alert>
-          )}
-        </Stack>
-      </Stack>
+          </Stack>
 
-      {showScadError ? (
-        <Box sx={{ maxWidth: 960 }} aria-live="polite">
-          <Alert severity="error">OpenSCAD encountered an error :/</Alert>
-          <pre>{scadError?.join('\n')}</pre>
-        </Box>
-      ) : null}
-    </Stack>
+          {showScadError ? (
+            <Box sx={{ maxWidth: 'calc(min(960px, 80%))' }} aria-live="polite">
+              <Alert severity="error">OpenSCAD encountered an error :/</Alert>
+              <pre>{scadError?.join('\n')}</pre>
+            </Box>
+          ) : null}
+        </Stack>
+      </Box>
+    </ThemeProvider>
   );
 }
 

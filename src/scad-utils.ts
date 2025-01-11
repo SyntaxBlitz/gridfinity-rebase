@@ -1,6 +1,16 @@
 import { Shape } from 'three';
 import { getShapeBoundingBoxCentroid, RotationType } from './hull-utils.ts';
 
+import { v4 as uuidv4 } from 'uuid';
+
+let scadWorker: Worker | null = null;
+
+export const initSCADWorker = () => {
+  scadWorker = new Worker(new URL('workers/scad-worker.ts', import.meta.url), {
+    type: 'module',
+  });
+};
+
 // todo: get the positioning for the gold stl as well
 export const generateScadForShapes = (
   shapes: Shape[],
@@ -81,19 +91,25 @@ export const runOpenSCAD = (
     errors: string[];
   }>((resolve, reject) => {
     try {
-      const worker = new Worker(
-        new URL('workers/scad-worker.js', import.meta.url),
-        {
-          type: 'module',
-        }
-      );
-      worker.postMessage({
+      if (!scadWorker) {
+        throw new Error('SCAD worker not initialized');
+      }
+
+      const requestId = uuidv4();
+
+      scadWorker.postMessage({
         scadSrc,
         toFixStl,
         goldStl,
+        requestId,
       });
 
-      worker.onmessage = (e) => {
+      // i guess this is a memory leak if aborting for another
+      scadWorker.onmessage = (e) => {
+        if (e.data.requestId !== requestId) {
+          return;
+        }
+
         resolve({
           blob: e.data.blob as Blob | null,
           errors: e.data.errors as string[],

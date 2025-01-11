@@ -18,11 +18,15 @@
   - but this isn't super high-priority. i think most users have one preference, and it'll stick in their localstorage. this isn't really an 'exploratory' tool where you get to look at all the options. wrong ui for that anyway.
 
 - warn on badness
-- preload openscad.wasm (57MB, damn)
+  \*- preload openscad.wasm (57MB, damn)
+- find a better way to keep the instance in memory if possible instead of making a new one each time
+- add a default prefab at least
 
-- what doesn't work? (out of scope)
-  - 'magnets only on corners' -- every base needs to be the same
-  - half-pitch gridfinity
-  - non-42mm gridfinity
-  - STLs not in millimeters
-  - STL mesh not manifold
+\*- what doesn't work? (out of scope)
+\*- 'magnets only on corners' -- every base needs to be the same
+\*- but you can always just. not put magnets in those corners!
+_- half-pitch gridfinity
+_- non-42mm gridfinity
+_- STLs not in millimeters
+_- STL mesh not manifold
+\*- eco bins
