@@ -572,6 +572,7 @@ function App() {
                 <input
                   className="sr-only"
                   type="file"
+                  accept=".stl"
                   ref={toFixInputRef}
                   onChange={(e) =>
                     setToFixInputFile(e.target.files?.[0] ?? null)
@@ -602,7 +603,7 @@ function App() {
               </Stack>
             </Stack>
             <Symbol symbol="+" />
-            <Stack alignItems="center" spacing={1}>
+            <Stack alignItems="center" spacing={2}>
               <Box
                 position="relative"
                 sx={{
@@ -652,6 +653,7 @@ function App() {
                 <input
                   className="sr-only"
                   type="file"
+                  accept=".stl"
                   ref={goldInputRef}
                   onChange={(e) =>
                     setGoldInputFile(e.target.files?.[0] ?? null)
@@ -661,25 +663,33 @@ function App() {
                   width={CANVAS_WIDTH}
                   height={CANVAS_HEIGHT}
                   ref={goldCanvasRef}
-                ></canvas>
-              </Box>
-              <Stack spacing={0} alignItems="center">
-                <Box>Choose any Gridfinity module with a base you like.</Box>
-                <Box
+                ></canvas>{' '}
+                <Stack
+                  spacing={0}
+                  alignItems="center"
                   sx={{
-                    fontSize: 14,
-                    color: '#666',
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    width: '100%',
+                    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                    p: 2,
+                    boxSizing: 'border-box',
                   }}
                 >
-                  (I'll remember this choice for later.)
-                </Box>
-              </Stack>
-              <Stack
-                spacing={2}
-                maxWidth={CANVAS_WIDTH}
-                pt={2}
-                aria-live="polite"
-              >
+                  <Box>Choose any Gridfinity module with a base you like.</Box>
+                  <Box
+                    sx={{
+                      fontSize: 14,
+                      color: '#666',
+                    }}
+                  >
+                    (I'll remember this choice for later.)
+                  </Box>
+                </Stack>
+              </Box>
+
+              <Stack spacing={2} maxWidth={CANVAS_WIDTH} aria-live="polite">
                 {goldDetections === null ? null : (
                   <>
                     {goldDetections.rotation !== 'original' ? (
@@ -704,7 +714,7 @@ function App() {
               </Stack>
             </Stack>
             <Symbol symbol="=" />
-            <Stack alignItems="stretch" spacing={2}>
+            <Stack alignItems="center" spacing={2}>
               <Box
                 position="relative"
                 sx={{
