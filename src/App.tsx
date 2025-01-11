@@ -431,8 +431,6 @@ function App() {
       loadSTLGeometry(URL.createObjectURL(goldInputBlob)),
 
       new Promise<Font>((resolve) => {
-        // todo we've massively over-imported open sans characters
-        // https://gero3.github.io/facetype.js/
         new FontLoader().load(
           `${import.meta.env.BASE_URL}/open-sans-numerals.json`,
           resolve

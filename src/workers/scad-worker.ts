@@ -13,12 +13,11 @@ const initializeInstance = () => {
     print: (s: string) => print(s),
     printErr: (s: string) => printErr(s),
 
-    locateFile: function () {
+    locateFile: function (_path: string, _scriptDirectory: string) {
       if (self.location.origin === 'https://gridfinity.tools') {
         // if you're hosting this app elsewhere, please host the
         // wasm file yourself - it's a big file! -tim
-        // TODO move this to another bucket lol
-        return 'https://noggin-run-inputs-dev-tja.rgdata.net/openscad.wasm';
+        return 'https://tja-project-files.rgdata.net/openscad-2024.08.22.wasm';
       } else {
         const importMetaUrl = import.meta.env.BASE_URL;
         return `${importMetaUrl}/src/openscad.wasm`;
@@ -40,6 +39,7 @@ const initializeInstance = () => {
 // I do think it's worth preloading, in general, but if a user finds this site on mobile,
 // they're probably not actually using the tool anyway. If they are, their first (pre-cache)
 // use can wait until interaction.
+// (oh it's only 17MB zstd but still)
 const isOnMobile = navigator.userAgent.toLowerCase().includes('mobi');
 if (!isOnMobile) {
   initializeInstance();
