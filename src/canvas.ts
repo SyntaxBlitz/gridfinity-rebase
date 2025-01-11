@@ -19,15 +19,7 @@ export const useOrbitCanvas = (canvasWidth: number, canvasHeight: number) => {
     const scene = new THREE.Scene();
     sceneRef.current = scene;
     THREE.Object3D.DEFAULT_UP = new THREE.Vector3(0, 0, 1);
-    // const camera = new THREE.OrthographicCamera(
-    //   -100,
-    //   100,
-    //   100 / ratio,
-    //   -100 / ratio,
-    //   0.1,
-    //   1000
-    // );
-    const camera = new THREE.PerspectiveCamera(75, ratio, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(75, ratio, 0.1, 10000);
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 
@@ -39,7 +31,7 @@ export const useOrbitCanvas = (canvasWidth: number, canvasHeight: number) => {
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.autoRotate = true;
-    controls.autoRotateSpeed = 3;
+    controls.autoRotateSpeed = 2;
 
     scene.userData = {
       camera,
@@ -64,14 +56,26 @@ const clearScene = (scene: THREE.Scene) => {
   scene.clear();
 };
 
-export const useRenderInputFile = (
+const addIdleIndicators = (scene: THREE.Scene) => {
+  // const idleIndicator = new THREE.Mesh(
+  //   new THREE.BoxGeometry(1, 1, 1),
+  //   new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+  // );
+  // scene.add(idleIndicator);
+
+  scene.userData.controls.autoRotate = false;
+};
+
+export const useRenderBlob = (
   inputBlob: Blob | null,
-  sceneRef: React.RefObject<THREE.Scene | null>,
-  gridOffset: boolean = false
+  sceneRef: React.RefObject<THREE.Scene | null>
 ) => {
   useEffect(() => {
     if (!inputBlob) {
-      sceneRef.current && clearScene(sceneRef.current);
+      if (sceneRef.current) {
+        clearScene(sceneRef.current);
+        addIdleIndicators(sceneRef.current);
+      }
       return;
     }
 
@@ -130,70 +134,88 @@ export const useRenderInputFile = (
 
       meshGeometry.computeBoundingBox();
 
-      const meshTop = meshGeometry.boundingBox?.max.z ?? 5;
-      const minZ = meshGeometry.boundingBox?.min.z ?? 0;
-      const meshHeight = meshTop - minZ;
-      sceneRef.current?.userData.controls.reset();
-      const camera = sceneRef.current?.userData.camera;
-      // camera.position.z = meshTop * 2;
-      camera.position.z = meshHeight * 2 + minZ;
-      camera.position.y = (meshGeometry.boundingBox?.max.y ?? 0) * 4;
-      camera.position.x = (meshGeometry.boundingBox?.max.x ?? 0) * 4;
+      const maxX = meshGeometry.boundingBox?.max.x ?? 5;
+      const maxY = meshGeometry.boundingBox?.max.y ?? 5;
+      const maxZ = meshGeometry.boundingBox?.max.z ?? 5;
 
-      camera.lookAt(0, 0, meshTop);
+      const minX = meshGeometry.boundingBox?.min.x ?? -5;
+      const minY = meshGeometry.boundingBox?.min.y ?? -5;
+      const minZ = meshGeometry.boundingBox?.min.z ?? -5;
+
+      const sizeX = maxX - minX;
+      const sizeY = maxY - minY;
+      const sizeZ = maxZ - minZ;
+
+      const midpointX = (maxX + minX) / 2;
+      const midpointY = (maxY + minY) / 2;
+
+      if (sceneRef.current) {
+        sceneRef.current.userData.controls.reset();
+        sceneRef.current.userData.controls.autoRotate = true;
+      }
+
+      const camera = sceneRef.current?.userData.camera;
+      // camera.position.z = maxZ * 2;
+
+      camera.position.x = sizeX * 1.6 + maxX;
+      camera.position.y = sizeY * 1.6 + maxY;
+      const MIN_ADDITIONAL_HEIGHT = 35; // otherwise hard to see flat bois
+      const additionalHeight = Math.max(sizeZ * 1.4, MIN_ADDITIONAL_HEIGHT);
+      camera.position.z = maxZ + additionalHeight;
+
+      // camera.lookAt(midpointX, midpointY, maxZ);
+
+      sceneRef.current?.userData.controls.target.set(
+        midpointX,
+        midpointY,
+        maxZ
+      );
 
       camera.zoom = 1;
 
       const light = new THREE.DirectionalLight(0xffffff, 2);
-      light.position.set(50, 50, meshTop + 50);
-      light.lookAt(0, 0, 0);
+      // light.position.set(50, 50, maxZ + 50);
+      light.position.set(maxX + 50, maxY + 50, maxZ + 50);
+      light.lookAt(midpointX, midpointY, 0);
       sceneRef.current?.add(light);
 
       // realized it's pretty useful to be able to see the bottom lol
+      // well, matters less now that we have transparent and wireframes but /shrug
       const light2 = new THREE.DirectionalLight(0xffffff, 1);
-      light2.position.set(30, -30, -50);
-      light2.lookAt(0, 0, 0);
+      light2.position.set(maxX + 30, minY - 30, minZ - 50);
+      light2.lookAt(midpointX, midpointY, 0);
       sceneRef.current?.add(light2);
 
       const ambientLight = new THREE.AmbientLight(0xffffff);
       ambientLight.intensity = 0.8;
       sceneRef.current?.add(ambientLight);
 
-      const maxX = Math.max(
-        Math.abs(meshGeometry.boundingBox?.min.x ?? 0),
-        Math.abs(meshGeometry.boundingBox?.max.x ?? 0)
-      );
-      const maxY = Math.max(
-        Math.abs(meshGeometry.boundingBox?.min.y ?? 0),
-        Math.abs(meshGeometry.boundingBox?.max.y ?? 0)
-      );
-      // technically if X is pos and Y is neg this is off but w/e
-      const maxRadius = Math.sqrt(maxX ** 2 + maxY ** 2);
+      const maxRadius = Math.sqrt((sizeX / 2) ** 2 + (sizeY / 2) ** 2);
 
       // add a cute grid at the ground plane
       const SPACING = 42;
-      const UNDER_PLANE_SIZE =
-        Math.ceil((maxRadius * 2 * 3) / SPACING) * SPACING;
+      const PLANE_SIZE_MULTIPLIER = 5;
+      const underPlaneSize =
+        Math.ceil((maxRadius * 2 * PLANE_SIZE_MULTIPLIER) / SPACING) * SPACING;
       const grid = new THREE.GridHelper(
-        UNDER_PLANE_SIZE,
-        UNDER_PLANE_SIZE / SPACING
-        // 0x000000,
-        // 0xff0000
+        underPlaneSize,
+        underPlaneSize / SPACING,
+        0x666666,
+        0x666666
       );
       grid.material.opacity = 0.2;
       grid.material.transparent = true;
-      grid.position.z = -0.5;
       grid.rotation.x = Math.PI / 2;
-      if (gridOffset) {
-        grid.position.x = SPACING / 2;
-        grid.position.y = SPACING / 2;
-      }
+
+      grid.position.x = midpointX;
+      grid.position.y = midpointY;
+      grid.position.z = minZ - 0.5;
 
       sceneRef.current?.add(grid);
 
       const gridOverlay = new THREE.PlaneGeometry(
-        UNDER_PLANE_SIZE * 1.01,
-        UNDER_PLANE_SIZE * 1.01
+        underPlaneSize * 1.01,
+        underPlaneSize * 1.01
       );
       // the better way to do this would be to write a shader to draw the grid but i don't wanna
       const gridOverlayMaterial = new THREE.ShaderMaterial({
@@ -232,11 +254,15 @@ export const useRenderInputFile = (
         transparent: true,
       });
       const gridOverlayMesh = new THREE.Mesh(gridOverlay, gridOverlayMaterial);
-      gridOverlayMesh.position.z = 0;
+      gridOverlayMesh.position.x = grid.position.x;
+      gridOverlayMesh.position.y = grid.position.y;
+      gridOverlayMesh.position.z = grid.position.z + 0.5;
       sceneRef.current?.add(gridOverlayMesh);
 
       const gridUnderlayMesh = new THREE.Mesh(gridOverlay, gridOverlayMaterial);
-      gridUnderlayMesh.position.z = -1;
+      gridUnderlayMesh.position.x = grid.position.x;
+      gridUnderlayMesh.position.y = grid.position.y;
+      gridUnderlayMesh.position.z = grid.position.z - 0.5;
       gridUnderlayMesh.rotation.x = Math.PI;
       sceneRef.current?.add(gridUnderlayMesh);
 
@@ -249,5 +275,5 @@ export const useRenderInputFile = (
     return () => {
       aborted = true;
     };
-  }, [inputBlob]);
+  }, [inputBlob, sceneRef.current]);
 };

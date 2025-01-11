@@ -1,3 +1,4 @@
+// @ts-ignore TODO i guess we could add a declaration
 import hull from 'hull.js';
 import {
   BufferGeometry,
@@ -140,7 +141,7 @@ const isHullBad = (island: Shape) => {
   const width = maxX - minX;
   const height = maxY - minY;
 
-  console.log({ width, height });
+  // console.log({ width, height });
 
   return (
     Math.abs(width - expected) > badnessThreshold ||
@@ -203,7 +204,7 @@ export const getBestShapeHullsForGeometry = (
 
   for (const rotation of rotations) {
     const shapes = getShapeHullsForGeometry(rotation.geometry);
-    console.log({ rotation, shapes });
+    // console.log({ rotation, shapes });
     const badness = shapes.reduce((acc, shape) => {
       if (isHullBad(shape)) {
         return acc + 1;
@@ -211,7 +212,7 @@ export const getBestShapeHullsForGeometry = (
       return acc;
     }, 0);
 
-    console.log({ badness });
+    // console.log({ badness });
 
     if (best === null || badness < best.badness) {
       best = {
@@ -226,7 +227,7 @@ export const getBestShapeHullsForGeometry = (
     }
   }
 
-  console.log({ best });
+  // console.log({ best });
 
   if (!best) {
     throw new Error('No best found');
@@ -241,7 +242,7 @@ export const getZMinForGeometry = (geometry: BufferGeometry) => {
 };
 
 export const getShapeBoundingBoxCentroid = (shape: Shape) => {
-  const { shape: points } = shape.extractPoints(1);
+  const { shape: points } = shape.extractPoints(40);
   const minX = Math.min(...points.map((v) => v.x));
   const maxX = Math.max(...points.map((v) => v.x));
   const minY = Math.min(...points.map((v) => v.y));

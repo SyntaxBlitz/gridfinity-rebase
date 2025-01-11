@@ -49,7 +49,8 @@ ${centers
 };
 
 // i thought about 'undoing' the rotation, but frankly i think it's unlikely you'll
-// have magnet hole preferences and _not_ want to have a consistent rotation
+// have magnet hole preferences and _not_ want to have a consistent rotation when printing
+// (e.g. because you're dropping magnets in the print or have specific slicer settings)
 const rotateSCADCodeForRotation = (type: RotationType): string => {
   switch (type) {
     case 'x+':
@@ -71,8 +72,14 @@ export const runOpenSCAD = (
   scadSrc: string,
   toFixStl: ArrayBuffer,
   goldStl: ArrayBuffer
-) => {
-  return new Promise<string>((resolve, reject) => {
+): Promise<{
+  blob: Blob | null;
+  errors: string[];
+}> => {
+  return new Promise<{
+    blob: Blob | null;
+    errors: string[];
+  }>((resolve, reject) => {
     const worker = new Worker(
       new URL('workers/scad-worker.js', import.meta.url),
       {
@@ -86,12 +93,10 @@ export const runOpenSCAD = (
     });
 
     worker.onmessage = (e) => {
-      if (e.data.type === 'error') {
-        reject(e.data.messages);
-        return;
-      }
-
-      resolve(URL.createObjectURL(e.data.blob));
+      resolve({
+        blob: e.data.blob as Blob | null,
+        errors: e.data.errors as string[],
+      });
     };
   });
 };

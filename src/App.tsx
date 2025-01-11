@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import './App.css';
 
 import { Alert, Box, Button, LinearProgress, Stack } from '@mui/material';
 
@@ -10,7 +9,7 @@ import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 import { Font, FontLoader } from 'three/addons/loaders/FontLoader.js';
 
 // import { ConvexHull } from "three/examples/jsm/math/ConvexHull.js";
-import { useOrbitCanvas, useRenderInputFile } from './canvas.ts';
+import { useOrbitCanvas, useRenderBlob } from './canvas.ts';
 import { useLoadInputFileBlob } from './file-utils.ts';
 import {
   getBestShapeHullsForGeometry,
@@ -21,8 +20,8 @@ import { loadSTLGeometry } from './mesh-utils.ts';
 import { generateScadForShapes, runOpenSCAD } from './scad-utils.ts';
 
 // todo nice to make this dynamic
-const CANVAS_WIDTH = 420;
-const CANVAS_HEIGHT = 420;
+const CANVAS_WIDTH = 400;
+const CANVAS_HEIGHT = 400;
 
 const loadFileAsBlob = async (filename: string): Promise<Blob> => {
   const response = await fetch(filename);
@@ -40,12 +39,76 @@ const openDb = async () => {
   });
 };
 
+function Symbol({ symbol }: { symbol: string }) {
+  return (
+    <Box
+      sx={{
+        // this feels like one of those things there's a better flexboxy way to do
+        width: 'auto',
+        height: CANVAS_HEIGHT,
+        display: 'flex',
+        alignItems: 'center',
+        flexDirection: 'row',
+
+        // padding kinda random
+        [`@container (max-width: ${CANVAS_WIDTH * 3 + 100}px)`]: {
+          width: CANVAS_WIDTH,
+          height: 'auto',
+          flexDirection: 'column',
+        },
+
+        ' & h2': {
+          margin: 0,
+          padding: 0,
+        },
+      }}
+    >
+      <h2>{symbol}</h2>
+    </Box>
+  );
+}
+
+function Dropzone({ text, shown }: { text: string; shown: boolean }) {
+  return (
+    <Box
+      sx={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        zIndex: 1,
+        width: '100%',
+        height: '100%',
+
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+
+        boxSizing: 'border-box',
+        border: '12px dashed #ddd',
+        borderRadius: 12,
+        padding: 6,
+
+        textAlign: 'center',
+        fontWeight: 600,
+        fontSize: '1.8em',
+
+        pointerEvents: 'none',
+
+        opacity: shown ? 1 : 0,
+        transition: 'opacity 0.2s',
+      }}
+    >
+      {text}
+    </Box>
+  );
+}
+
 let loadedGold = false;
 let abortGoldLoad = false;
 
 function App() {
-  const [scad, setScad] = useState<string | null>(null);
-
   const toFixInputRef = useRef<HTMLInputElement>(null);
   const goldInputRef = useRef<HTMLInputElement>(null);
 
@@ -53,6 +116,11 @@ function App() {
   const [toFixInputBlob, setToFixInputBlob] = useState<Blob | null>(null);
   const [goldInputFile, setGoldInputFile] = useState<File | null>(null);
   const [goldInputBlob, setGoldInputBlob] = useState<Blob | null>(null);
+
+  const [fixedBlob, setFixedBlob] = useState<Blob | null>(null);
+
+  const [draggingToFix, setDraggingToFix] = useState<boolean>(false);
+  const [draggingGold, setDraggingGold] = useState<boolean>(false);
 
   const [scadLoading, setScadLoading] = useState<boolean>(false);
   const [scadError, setScadError] = useState<string[] | null>(null);
@@ -72,11 +140,16 @@ function App() {
     CANVAS_WIDTH,
     CANVAS_HEIGHT
   );
+  const { canvasRef: fixedCanvasRef, sceneRef: fixedSceneRef } = useOrbitCanvas(
+    CANVAS_WIDTH,
+    CANVAS_HEIGHT
+  );
 
-  useRenderInputFile(toFixInputFile, toFixSceneRef);
+  useRenderBlob(toFixInputBlob, toFixSceneRef);
   useLoadInputFileBlob(toFixInputFile, setToFixInputBlob);
-  useRenderInputFile(goldInputFile, goldSceneRef);
+  useRenderBlob(goldInputBlob, goldSceneRef);
   useLoadInputFileBlob(goldInputFile, setGoldInputBlob);
+  useRenderBlob(fixedBlob, fixedSceneRef);
 
   useEffect(() => {
     if (goldInputFile !== null) {
@@ -135,13 +208,22 @@ function App() {
     })();
   }, [setGoldInputFile]);
 
+  useEffect(() => {
+    run();
+  }, [toFixInputBlob, goldInputBlob]);
+
   const run = useCallback(async () => {
-    if (!toFixInputFile || !toFixInputBlob || !goldInputBlob) {
-      console.log({ toFixInputFile, toFixInputBlob, goldInputBlob });
+    if (!toFixInputBlob || !goldInputBlob) {
+      console.log({ toFixInputBlob, goldInputBlob });
       return;
     }
 
-    const toFixName = toFixInputFile.name;
+    // TODO abort running workers
+
+    setScadLoading(true);
+    setScadError(null);
+    setFixedBlob(null);
+
     const toFixBlobUrl = URL.createObjectURL(toFixInputBlob);
 
     await (async () => {
@@ -181,7 +263,7 @@ function App() {
         const textGeo = new TextGeometry(`${i + 1}`, {
           font: openSans,
           size: 16,
-          height: 0.1,
+          depth: 0.1,
         });
         const textMaterial = new THREE.MeshBasicMaterial({
           color: 0xffffff,
@@ -231,98 +313,149 @@ function App() {
       const zMin = getZMinForGeometry(rotation.geometry!);
 
       const scadSrc = generateScadForShapes(shapes, zMin, rotation);
-      setScad(scadSrc);
       scadRef.current = scadSrc;
     })();
-
-    setScadLoading(true);
-    setScadError(null);
 
     const toFixBuffer = await toFixInputBlob.arrayBuffer();
     const goldBuffer = await goldInputBlob.arrayBuffer();
 
-    try {
-      const blobUrl = await runOpenSCAD(
-        scadRef.current!,
-        toFixBuffer,
-        goldBuffer
-      );
+    const { blob, errors } = await runOpenSCAD(
+      scadRef.current!,
+      toFixBuffer,
+      goldBuffer
+    );
 
-      const link = document.createElement('a');
-      link.href = blobUrl;
+    setFixedBlob(blob);
+    setScadError(errors);
+    setScadLoading(false);
+  }, [toFixInputBlob, goldInputBlob, setScadLoading, setScadError]);
 
-      const fixedName = toFixName.replace(/\.stl$/, '-rebase.stl');
-      link.download = fixedName;
-
-      document.body.append(link);
-      link.click();
-      link.remove();
-    } catch (e: any) {
-      setScadError(e);
-    } finally {
-      setScadLoading(false);
-    }
-    // await runOpenSCAD(scad!, cube, cube);
-  }, [
-    toFixInputFile,
-    toFixInputBlob,
-    goldInputBlob,
-    setScadLoading,
-    setScadError,
-    setScad,
-  ]);
+  const showScadError =
+    // we attempted a run, got output, but a null blob
+    (scadError && fixedBlob === null) ||
+    // even if we got a blob, there's an error in the output
+    // e.g. non-manifold mesh
+    (scadError?.some((e) => e.includes('ERROR:')) ?? false);
 
   return (
-    <Stack width={960} margin="auto" spacing={2} alignItems="center" py={6}>
-      <Stack direction="row" alignItems={'center'} spacing={2}>
-        <Box
-          position="relative"
-          sx={{
-            border: '1px solid #ddd',
-          }}
-        >
-          <Stack
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-            }}
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            width="100%"
-            px={2}
-            // py={1}
-            boxSizing="border-box"
-          >
-            <h2>File to print</h2>
-
-            <Button
-              sx={{ backgroundColor: 'white' }}
-              variant="outlined"
-              onClick={() => toFixInputRef.current?.click()}
-            >
-              Choose File
-            </Button>
-          </Stack>
-          <input
-            className="sr-only"
-            type="file"
-            ref={toFixInputRef}
-            onChange={(e) => setToFixInputFile(e.target.files?.[0] ?? null)}
-          />
-          <canvas ref={toFixCanvasRef}></canvas>
-        </Box>
-        <Box>
-          <h2>+</h2>
-        </Box>
-        <Stack>
+    <Stack
+      width="100%"
+      margin="auto"
+      spacing={2}
+      alignItems="center"
+      py={6}
+      sx={{ containerType: 'size' }}
+    >
+      <Stack
+        alignItems={'center'}
+        sx={{
+          gap: 2,
+          flexDirection: 'row',
+          alignItems: 'flex-start',
+          '@container (max-width: 1400px)': {
+            flexDirection: 'column',
+            alignItems: 'center',
+          },
+        }}
+      >
+        <Stack alignItems="center" spacing={2}>
           <Box
             position="relative"
             sx={{
               border: '1px solid #ddd',
+              display: 'flex',
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDraggingToFix(true);
+            }}
+            onDragLeave={() => setDraggingToFix(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDraggingToFix(false);
+              const file = e.dataTransfer.files[0];
+              setToFixInputFile(file);
             }}
           >
+            <Dropzone text="Drop a file to fix" shown={draggingToFix} />
+            <Stack
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+              }}
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              width="100%"
+              px={2}
+              // py={1}
+              boxSizing="border-box"
+            >
+              <h2>File to fix</h2>
+
+              <Button
+                sx={{ backgroundColor: 'white' }}
+                variant="outlined"
+                onClick={() => toFixInputRef.current?.click()}
+              >
+                Choose File
+              </Button>
+            </Stack>
+            <input
+              className="sr-only"
+              type="file"
+              ref={toFixInputRef}
+              onChange={(e) => setToFixInputFile(e.target.files?.[0] ?? null)}
+            />
+            <canvas
+              width={CANVAS_WIDTH}
+              height={CANVAS_HEIGHT}
+              ref={toFixCanvasRef}
+            ></canvas>
+          </Box>
+          <Stack spacing={2} maxWidth={CANVAS_WIDTH} aria-live="polite">
+            {detections === null ? null : (
+              <>
+                {detections.rotation !== 'original' ? (
+                  <Alert severity="info">
+                    Decided to rotate the model first (
+                    <strong>{detections.rotation}</strong>) so that bases are
+                    flat on the XY plane.
+                  </Alert>
+                ) : null}
+                <Alert severity="info">
+                  Detected {detections.shapeCount} base
+                  {detections.shapeCount === 1 ? '' : 's'} to replace.
+                </Alert>
+              </>
+            )}
+          </Stack>
+        </Stack>
+        <Symbol symbol="+" />
+        <Stack alignItems="center" spacing={1}>
+          <Box
+            position="relative"
+            sx={{
+              border: '1px solid #ddd',
+              display: 'flex',
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDraggingGold(true);
+            }}
+            onDragLeave={() => setDraggingGold(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDraggingGold(false);
+              const file = e.dataTransfer.files[0];
+              setGoldInputFile(file);
+            }}
+          >
+            <Dropzone
+              text="Drop a file with a replacement base"
+              shown={draggingGold}
+            />
             <Stack
               sx={{
                 position: 'absolute',
@@ -352,42 +485,73 @@ function App() {
               ref={goldInputRef}
               onChange={(e) => setGoldInputFile(e.target.files?.[0] ?? null)}
             />
-            <canvas ref={goldCanvasRef}></canvas>
+            <canvas
+              width={CANVAS_WIDTH}
+              height={CANVAS_HEIGHT}
+              ref={goldCanvasRef}
+            ></canvas>
           </Box>
-          <Box>
-            Or upload <strong>any</strong> Gridfinity module with a base you
-            like
+          <Box>Upload any Gridfinity module with a base you like</Box>
+        </Stack>
+        <Symbol symbol="=" />
+        <Stack>
+          <Box
+            position="relative"
+            sx={{
+              border: '1px solid #ddd',
+              display: 'flex',
+            }}
+          >
+            <Stack
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+              }}
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              width="100%"
+              px={2}
+              // py={1}
+              boxSizing="border-box"
+            >
+              <h2>Rebased</h2>
+              {fixedBlob && (
+                <Button
+                  // sx={{ backgroundColor: 'white' }}
+                  variant="contained"
+                  component="a"
+                  // maybe should cache this
+                  href={URL.createObjectURL(fixedBlob)}
+                  download={
+                    toFixInputFile
+                      ? toFixInputFile.name.replace(/\.stl$/, '-rebased.stl')
+                      : 'rebased.stl'
+                  }
+                >
+                  Save
+                </Button>
+              )}
+            </Stack>
+            <canvas
+              width={CANVAS_WIDTH}
+              height={CANVAS_HEIGHT}
+              ref={fixedCanvasRef}
+            ></canvas>
           </Box>
         </Stack>
       </Stack>
-      {/* <pre>{scad}</pre> */}
-      <Button onClick={run}>Run</Button>
-      <Stack spacing={2} width={640}>
-        {detections === null ? null : (
-          <>
-            {detections.rotation !== 'original' ? (
-              <Alert severity="info">
-                Decided to rotate the model first (
-                <strong>{detections.rotation}</strong>) so that bases are flat
-                on the XY plane.
-              </Alert>
-            ) : null}
-            <Alert severity="info">
-              Detected {detections.shapeCount} base
-              {detections.shapeCount === 1 ? '' : 's'} to rebase.
-            </Alert>
-          </>
-        )}
-      </Stack>
       {scadLoading ? (
-        <Stack spacing={1}>
+        <Stack spacing={1} aria-live="polite">
           <Box>Running rebase operation. This can take some time!</Box>
           <LinearProgress />
         </Stack>
       ) : null}
-      {scadError ? (
-        <Box>
-          OpenSCAD failed to run :/<pre>{scadError.join('\n')}</pre>
+      {showScadError ? (
+        <Box sx={{ maxWidth: 960 }} aria-live="polite">
+          <Alert severity="error">OpenSCAD encountered an error :/</Alert>
+          <pre>{scadError?.join('\n')}</pre>
         </Box>
       ) : null}
     </Stack>
