@@ -2,36 +2,36 @@ var OpenSCAD = (() => {
   var _scriptDir = import.meta.url;
 
   return function (OpenSCAD = {}) {
-    var Module = typeof OpenSCAD != "undefined" ? OpenSCAD : {};
+    var Module = typeof OpenSCAD != 'undefined' ? OpenSCAD : {};
 
     var readyPromiseResolve, readyPromiseReject;
 
-    Module["ready"] = new Promise(function (resolve, reject) {
+    Module['ready'] = new Promise(function (resolve, reject) {
       readyPromiseResolve = resolve;
       readyPromiseReject = reject;
     });
 
     [
-      "_main",
-      "getExceptionMessage",
-      "___get_exception_message",
-      "_free",
-      "_fflush",
-      "onRuntimeInitialized",
+      '_main',
+      'getExceptionMessage',
+      '___get_exception_message',
+      '_free',
+      '_fflush',
+      'onRuntimeInitialized',
     ].forEach((prop) => {
-      if (!Object.getOwnPropertyDescriptor(Module["ready"], prop)) {
-        Object.defineProperty(Module["ready"], prop, {
+      if (!Object.getOwnPropertyDescriptor(Module['ready'], prop)) {
+        Object.defineProperty(Module['ready'], prop, {
           get: () =>
             abort(
-              "You are getting " +
+              'You are getting ' +
                 prop +
-                " on the Promise object, instead of the instance. Use .then() to get called back with the instance, see the MODULARIZE docs in src/settings.js"
+                ' on the Promise object, instead of the instance. Use .then() to get called back with the instance, see the MODULARIZE docs in src/settings.js'
             ),
           set: () =>
             abort(
-              "You are setting " +
+              'You are setting ' +
                 prop +
-                " on the Promise object, instead of the instance. Use .then() to get called back with the instance, see the MODULARIZE docs in src/settings.js"
+                ' on the Promise object, instead of the instance. Use .then() to get called back with the instance, see the MODULARIZE docs in src/settings.js'
             ),
         });
       }
@@ -41,35 +41,35 @@ var OpenSCAD = (() => {
 
     var arguments_ = [];
 
-    var thisProgram = "./this.program";
+    var thisProgram = './this.program';
 
     var quit_ = (status, toThrow) => {
       throw toThrow;
     };
 
-    var ENVIRONMENT_IS_WEB = typeof window == "object";
+    var ENVIRONMENT_IS_WEB = typeof window == 'object';
 
-    var ENVIRONMENT_IS_WORKER = typeof importScripts == "function";
+    var ENVIRONMENT_IS_WORKER = typeof importScripts == 'function';
 
     var ENVIRONMENT_IS_NODE =
-      typeof process == "object" &&
-      typeof process.versions == "object" &&
-      typeof process.versions.node == "string";
+      typeof process == 'object' &&
+      typeof process.versions == 'object' &&
+      typeof process.versions.node == 'string';
 
     var ENVIRONMENT_IS_SHELL =
       !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIRONMENT_IS_WORKER;
 
-    if (Module["ENVIRONMENT"]) {
+    if (Module['ENVIRONMENT']) {
       throw new Error(
-        "Module.ENVIRONMENT has been deprecated. To force the environment, use the ENVIRONMENT compile-time option (for example, -sENVIRONMENT=web or -sENVIRONMENT=node)"
+        'Module.ENVIRONMENT has been deprecated. To force the environment, use the ENVIRONMENT compile-time option (for example, -sENVIRONMENT=web or -sENVIRONMENT=node)'
       );
     }
 
-    var scriptDirectory = "";
+    var scriptDirectory = '';
 
     function locateFile(path) {
-      if (Module["locateFile"]) {
-        return Module["locateFile"](path, scriptDirectory);
+      if (Module['locateFile']) {
+        return Module['locateFile'](path, scriptDirectory);
       }
       return scriptDirectory + path;
     }
@@ -78,100 +78,100 @@ var OpenSCAD = (() => {
 
     if (ENVIRONMENT_IS_SHELL) {
       if (
-        (typeof process == "object" && typeof require === "function") ||
-        typeof window == "object" ||
-        typeof importScripts == "function"
+        (typeof process == 'object' && typeof require === 'function') ||
+        typeof window == 'object' ||
+        typeof importScripts == 'function'
       )
         throw new Error(
-          "not compiled for this environment (did you build to HTML and try to run it not on the web, or set ENVIRONMENT to something - like node - and run it someplace else - like on the web?)"
+          'not compiled for this environment (did you build to HTML and try to run it not on the web, or set ENVIRONMENT to something - like node - and run it someplace else - like on the web?)'
         );
-      if (typeof read != "undefined") {
+      if (typeof read != 'undefined') {
         read_ = function shell_read(f) {
           return read(f);
         };
       }
       readBinary = function readBinary(f) {
         let data;
-        if (typeof readbuffer == "function") {
+        if (typeof readbuffer == 'function') {
           return new Uint8Array(readbuffer(f));
         }
-        data = read(f, "binary");
-        assert(typeof data == "object");
+        data = read(f, 'binary');
+        assert(typeof data == 'object');
         return data;
       };
       readAsync = function readAsync(f, onload, onerror) {
         setTimeout(() => onload(readBinary(f)), 0);
       };
-      if (typeof clearTimeout == "undefined") {
+      if (typeof clearTimeout == 'undefined') {
         globalThis.clearTimeout = (id) => {};
       }
-      if (typeof scriptArgs != "undefined") {
+      if (typeof scriptArgs != 'undefined') {
         arguments_ = scriptArgs;
-      } else if (typeof arguments != "undefined") {
+      } else if (typeof arguments != 'undefined') {
         arguments_ = arguments;
       }
-      if (typeof quit == "function") {
+      if (typeof quit == 'function') {
         quit_ = (status, toThrow) => {
           setTimeout(() => {
             if (!(toThrow instanceof ExitStatus)) {
               let toLog = toThrow;
-              if (toThrow && typeof toThrow == "object" && toThrow.stack) {
+              if (toThrow && typeof toThrow == 'object' && toThrow.stack) {
                 toLog = [toThrow, toThrow.stack];
               }
-              err("exiting due to exception: " + toLog);
+              err('exiting due to exception: ' + toLog);
             }
             quit(status);
           });
           throw toThrow;
         };
       }
-      if (typeof print != "undefined") {
-        if (typeof console == "undefined") console = {};
+      if (typeof print != 'undefined') {
+        if (typeof console == 'undefined') console = {};
         console.log = print;
         console.warn = console.error =
-          typeof printErr != "undefined" ? printErr : print;
+          typeof printErr != 'undefined' ? printErr : print;
       }
     } else if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
       if (ENVIRONMENT_IS_WORKER) {
         scriptDirectory = self.location.href;
-      } else if (typeof document != "undefined" && document.currentScript) {
+      } else if (typeof document != 'undefined' && document.currentScript) {
         scriptDirectory = document.currentScript.src;
       }
       if (_scriptDir) {
         scriptDirectory = _scriptDir;
       }
-      if (scriptDirectory.indexOf("blob:") !== 0) {
+      if (scriptDirectory.indexOf('blob:') !== 0) {
         scriptDirectory = scriptDirectory.substr(
           0,
-          scriptDirectory.replace(/[?#].*/, "").lastIndexOf("/") + 1
+          scriptDirectory.replace(/[?#].*/, '').lastIndexOf('/') + 1
         );
       } else {
-        scriptDirectory = "";
+        scriptDirectory = '';
       }
-      if (!(typeof window == "object" || typeof importScripts == "function"))
+      if (!(typeof window == 'object' || typeof importScripts == 'function'))
         throw new Error(
-          "not compiled for this environment (did you build to HTML and try to run it not on the web, or set ENVIRONMENT to something - like node - and run it someplace else - like on the web?)"
+          'not compiled for this environment (did you build to HTML and try to run it not on the web, or set ENVIRONMENT to something - like node - and run it someplace else - like on the web?)'
         );
       {
         read_ = (url) => {
           var xhr = new XMLHttpRequest();
-          xhr.open("GET", url, false);
+          xhr.open('GET', url, false);
           xhr.send(null);
           return xhr.responseText;
         };
         if (ENVIRONMENT_IS_WORKER) {
           readBinary = (url) => {
             var xhr = new XMLHttpRequest();
-            xhr.open("GET", url, false);
-            xhr.responseType = "arraybuffer";
+            xhr.open('GET', url, false);
+            xhr.responseType = 'arraybuffer';
             xhr.send(null);
             return new Uint8Array(xhr.response);
           };
         }
         readAsync = (url, onload, onerror) => {
           var xhr = new XMLHttpRequest();
-          xhr.open("GET", url, true);
-          xhr.responseType = "arraybuffer";
+          xhr.open('GET', url, true);
+          xhr.responseType = 'arraybuffer';
           xhr.onload = () => {
             if (xhr.status == 200 || (xhr.status == 0 && xhr.response)) {
               onload(xhr.response);
@@ -185,12 +185,12 @@ var OpenSCAD = (() => {
       }
       setWindowTitle = (title) => (document.title = title);
     } else {
-      throw new Error("environment detection error");
+      throw new Error('environment detection error');
     }
 
-    var out = Module["print"] || console.log.bind(console);
+    var out = Module['print'] || console.log.bind(console);
 
-    var err = Module["printErr"] || console.warn.bind(console);
+    var err = Module['printErr'] || console.warn.bind(console);
 
     Object.assign(Module, moduleOverrides);
 
@@ -198,81 +198,81 @@ var OpenSCAD = (() => {
 
     checkIncomingModuleAPI();
 
-    if (Module["arguments"]) arguments_ = Module["arguments"];
+    if (Module['arguments']) arguments_ = Module['arguments'];
 
-    legacyModuleProp("arguments", "arguments_");
+    legacyModuleProp('arguments', 'arguments_');
 
-    if (Module["thisProgram"]) thisProgram = Module["thisProgram"];
+    if (Module['thisProgram']) thisProgram = Module['thisProgram'];
 
-    legacyModuleProp("thisProgram", "thisProgram");
+    legacyModuleProp('thisProgram', 'thisProgram');
 
-    if (Module["quit"]) quit_ = Module["quit"];
+    if (Module['quit']) quit_ = Module['quit'];
 
-    legacyModuleProp("quit", "quit_");
+    legacyModuleProp('quit', 'quit_');
 
     assert(
-      typeof Module["memoryInitializerPrefixURL"] == "undefined",
-      "Module.memoryInitializerPrefixURL option was removed, use Module.locateFile instead"
+      typeof Module['memoryInitializerPrefixURL'] == 'undefined',
+      'Module.memoryInitializerPrefixURL option was removed, use Module.locateFile instead'
     );
 
     assert(
-      typeof Module["pthreadMainPrefixURL"] == "undefined",
-      "Module.pthreadMainPrefixURL option was removed, use Module.locateFile instead"
+      typeof Module['pthreadMainPrefixURL'] == 'undefined',
+      'Module.pthreadMainPrefixURL option was removed, use Module.locateFile instead'
     );
 
     assert(
-      typeof Module["cdInitializerPrefixURL"] == "undefined",
-      "Module.cdInitializerPrefixURL option was removed, use Module.locateFile instead"
+      typeof Module['cdInitializerPrefixURL'] == 'undefined',
+      'Module.cdInitializerPrefixURL option was removed, use Module.locateFile instead'
     );
 
     assert(
-      typeof Module["filePackagePrefixURL"] == "undefined",
-      "Module.filePackagePrefixURL option was removed, use Module.locateFile instead"
+      typeof Module['filePackagePrefixURL'] == 'undefined',
+      'Module.filePackagePrefixURL option was removed, use Module.locateFile instead'
     );
 
     assert(
-      typeof Module["read"] == "undefined",
-      "Module.read option was removed (modify read_ in JS)"
+      typeof Module['read'] == 'undefined',
+      'Module.read option was removed (modify read_ in JS)'
     );
 
     assert(
-      typeof Module["readAsync"] == "undefined",
-      "Module.readAsync option was removed (modify readAsync in JS)"
+      typeof Module['readAsync'] == 'undefined',
+      'Module.readAsync option was removed (modify readAsync in JS)'
     );
 
     assert(
-      typeof Module["readBinary"] == "undefined",
-      "Module.readBinary option was removed (modify readBinary in JS)"
+      typeof Module['readBinary'] == 'undefined',
+      'Module.readBinary option was removed (modify readBinary in JS)'
     );
 
     assert(
-      typeof Module["setWindowTitle"] == "undefined",
-      "Module.setWindowTitle option was removed (modify setWindowTitle in JS)"
+      typeof Module['setWindowTitle'] == 'undefined',
+      'Module.setWindowTitle option was removed (modify setWindowTitle in JS)'
     );
 
     assert(
-      typeof Module["TOTAL_MEMORY"] == "undefined",
-      "Module.TOTAL_MEMORY has been renamed Module.INITIAL_MEMORY"
+      typeof Module['TOTAL_MEMORY'] == 'undefined',
+      'Module.TOTAL_MEMORY has been renamed Module.INITIAL_MEMORY'
     );
 
-    legacyModuleProp("read", "read_");
+    legacyModuleProp('read', 'read_');
 
-    legacyModuleProp("readAsync", "readAsync");
+    legacyModuleProp('readAsync', 'readAsync');
 
-    legacyModuleProp("readBinary", "readBinary");
+    legacyModuleProp('readBinary', 'readBinary');
 
-    legacyModuleProp("setWindowTitle", "setWindowTitle");
+    legacyModuleProp('setWindowTitle', 'setWindowTitle');
 
-    var IDBFS = "IDBFS is no longer included by default; build with -lidbfs.js";
+    var IDBFS = 'IDBFS is no longer included by default; build with -lidbfs.js';
 
     var PROXYFS =
-      "PROXYFS is no longer included by default; build with -lproxyfs.js";
+      'PROXYFS is no longer included by default; build with -lproxyfs.js';
 
     var WORKERFS =
-      "WORKERFS is no longer included by default; build with -lworkerfs.js";
+      'WORKERFS is no longer included by default; build with -lworkerfs.js';
 
     var NODEFS =
-      "NODEFS is no longer included by default; build with -lnodefs.js";
+      'NODEFS is no longer included by default; build with -lnodefs.js';
 
     assert(
       !ENVIRONMENT_IS_NODE,
@@ -286,16 +286,16 @@ var OpenSCAD = (() => {
 
     var wasmBinary;
 
-    if (Module["wasmBinary"]) wasmBinary = Module["wasmBinary"];
+    if (Module['wasmBinary']) wasmBinary = Module['wasmBinary'];
 
-    legacyModuleProp("wasmBinary", "wasmBinary");
+    legacyModuleProp('wasmBinary', 'wasmBinary');
 
-    var noExitRuntime = Module["noExitRuntime"] || false;
+    var noExitRuntime = Module['noExitRuntime'] || false;
 
-    legacyModuleProp("noExitRuntime", "noExitRuntime");
+    legacyModuleProp('noExitRuntime', 'noExitRuntime');
 
-    if (typeof WebAssembly != "object") {
-      abort("no native wasm support detected");
+    if (typeof WebAssembly != 'object') {
+      abort('no native wasm support detected');
     }
 
     var wasmMemory;
@@ -306,12 +306,12 @@ var OpenSCAD = (() => {
 
     function assert(condition, text) {
       if (!condition) {
-        abort("Assertion failed" + (text ? ": " + text : ""));
+        abort('Assertion failed' + (text ? ': ' + text : ''));
       }
     }
 
     var UTF8Decoder =
-      typeof TextDecoder != "undefined" ? new TextDecoder("utf8") : undefined;
+      typeof TextDecoder != 'undefined' ? new TextDecoder('utf8') : undefined;
 
     function UTF8ArrayToString(heapOrArray, idx, maxBytesToRead) {
       idx >>>= 0;
@@ -321,7 +321,7 @@ var OpenSCAD = (() => {
       if (endPtr - idx > 16 && heapOrArray.buffer && UTF8Decoder) {
         return UTF8Decoder.decode(heapOrArray.subarray(idx, endPtr));
       }
-      var str = "";
+      var str = '';
       while (idx < endPtr) {
         var u0 = heapOrArray[idx++];
         if (!(u0 & 128)) {
@@ -339,9 +339,9 @@ var OpenSCAD = (() => {
         } else {
           if ((u0 & 248) != 240)
             warnOnce(
-              "Invalid UTF-8 leading byte " +
+              'Invalid UTF-8 leading byte ' +
                 ptrToString(u0) +
-                " encountered when deserializing a UTF-8 string in wasm memory to a JS string!"
+                ' encountered when deserializing a UTF-8 string in wasm memory to a JS string!'
             );
           u0 =
             ((u0 & 7) << 18) |
@@ -360,9 +360,9 @@ var OpenSCAD = (() => {
     }
 
     function UTF8ToString(ptr, maxBytesToRead) {
-      assert(typeof ptr == "number");
+      assert(typeof ptr == 'number');
       ptr >>>= 0;
-      return ptr ? UTF8ArrayToString(HEAPU8, ptr, maxBytesToRead) : "";
+      return ptr ? UTF8ArrayToString(HEAPU8, ptr, maxBytesToRead) : '';
     }
 
     function stringToUTF8Array(str, heap, outIdx, maxBytesToWrite) {
@@ -392,9 +392,9 @@ var OpenSCAD = (() => {
           if (outIdx + 3 >= endIdx) break;
           if (u > 1114111)
             warnOnce(
-              "Invalid Unicode code point " +
+              'Invalid Unicode code point ' +
                 ptrToString(u) +
-                " encountered when serializing a JS string to a UTF-8 string in wasm memory! (Valid unicode code points should be in range 0-0x10FFFF)."
+                ' encountered when serializing a JS string to a UTF-8 string in wasm memory! (Valid unicode code points should be in range 0-0x10FFFF).'
             );
           heap[outIdx++ >>> 0] = 240 | (u >> 18);
           heap[outIdx++ >>> 0] = 128 | ((u >> 12) & 63);
@@ -408,8 +408,8 @@ var OpenSCAD = (() => {
 
     function stringToUTF8(str, outPtr, maxBytesToWrite) {
       assert(
-        typeof maxBytesToWrite == "number",
-        "stringToUTF8(str, outPtr, maxBytesToWrite) is missing the third parameter that specifies the length of the output buffer!"
+        typeof maxBytesToWrite == 'number',
+        'stringToUTF8(str, outPtr, maxBytesToWrite) is missing the third parameter that specifies the length of the output buffer!'
       );
       return stringToUTF8Array(str, HEAPU8, outPtr, maxBytesToWrite);
     }
@@ -436,37 +436,37 @@ var OpenSCAD = (() => {
 
     function updateMemoryViews() {
       var b = wasmMemory.buffer;
-      Module["HEAP8"] = HEAP8 = new Int8Array(b);
-      Module["HEAP16"] = HEAP16 = new Int16Array(b);
-      Module["HEAP32"] = HEAP32 = new Int32Array(b);
-      Module["HEAPU8"] = HEAPU8 = new Uint8Array(b);
-      Module["HEAPU16"] = HEAPU16 = new Uint16Array(b);
-      Module["HEAPU32"] = HEAPU32 = new Uint32Array(b);
-      Module["HEAPF32"] = HEAPF32 = new Float32Array(b);
-      Module["HEAPF64"] = HEAPF64 = new Float64Array(b);
+      Module['HEAP8'] = HEAP8 = new Int8Array(b);
+      Module['HEAP16'] = HEAP16 = new Int16Array(b);
+      Module['HEAP32'] = HEAP32 = new Int32Array(b);
+      Module['HEAPU8'] = HEAPU8 = new Uint8Array(b);
+      Module['HEAPU16'] = HEAPU16 = new Uint16Array(b);
+      Module['HEAPU32'] = HEAPU32 = new Uint32Array(b);
+      Module['HEAPF32'] = HEAPF32 = new Float32Array(b);
+      Module['HEAPF64'] = HEAPF64 = new Float64Array(b);
     }
 
     assert(
-      !Module["STACK_SIZE"],
-      "STACK_SIZE can no longer be set at runtime.  Use -sSTACK_SIZE at link time"
+      !Module['STACK_SIZE'],
+      'STACK_SIZE can no longer be set at runtime.  Use -sSTACK_SIZE at link time'
     );
 
     assert(
-      typeof Int32Array != "undefined" &&
-        typeof Float64Array !== "undefined" &&
+      typeof Int32Array != 'undefined' &&
+        typeof Float64Array !== 'undefined' &&
         Int32Array.prototype.subarray != undefined &&
         Int32Array.prototype.set != undefined,
-      "JS engine does not provide full typed array support"
+      'JS engine does not provide full typed array support'
     );
 
     assert(
-      !Module["wasmMemory"],
-      "Use of `wasmMemory` detected.  Use -sIMPORTED_MEMORY to define wasmMemory externally"
+      !Module['wasmMemory'],
+      'Use of `wasmMemory` detected.  Use -sIMPORTED_MEMORY to define wasmMemory externally'
     );
 
     assert(
-      !Module["INITIAL_MEMORY"],
-      "Detected runtime INITIAL_MEMORY setting.  Use -sIMPORTED_MEMORY to define wasmMemory dynamically"
+      !Module['INITIAL_MEMORY'],
+      'Detected runtime INITIAL_MEMORY setting.  Use -sIMPORTED_MEMORY to define wasmMemory dynamically'
     );
 
     var wasmTable;
@@ -492,17 +492,17 @@ var OpenSCAD = (() => {
       var cookie2 = HEAPU32[(max + 4) >>> 2];
       if (cookie1 != 34821223 || cookie2 != 2310721022) {
         abort(
-          "Stack overflow! Stack cookie has been overwritten at " +
+          'Stack overflow! Stack cookie has been overwritten at ' +
             ptrToString(max) +
-            ", expected hex dwords 0x89BACDFE and 0x2135467, but received " +
+            ', expected hex dwords 0x89BACDFE and 0x2135467, but received ' +
             ptrToString(cookie2) +
-            " " +
+            ' ' +
             ptrToString(cookie1)
         );
       }
       if (HEAPU32[0 >>> 0] !== 1668509029) {
         abort(
-          "Runtime error: The application has corrupted its heap memory area (address zero)!"
+          'Runtime error: The application has corrupted its heap memory area (address zero)!'
         );
       }
     }
@@ -512,7 +512,7 @@ var OpenSCAD = (() => {
       var h8 = new Int8Array(h16.buffer);
       h16[0] = 25459;
       if (h8[0] !== 115 || h8[1] !== 99)
-        throw "Runtime error: expected the system to be little-endian! (Run with -sSUPPORT_BIG_ENDIAN to bypass)";
+        throw 'Runtime error: expected the system to be little-endian! (Run with -sSUPPORT_BIG_ENDIAN to bypass)';
     })();
 
     var __ATPRERUN__ = [];
@@ -536,11 +536,11 @@ var OpenSCAD = (() => {
     }
 
     function preRun() {
-      if (Module["preRun"]) {
-        if (typeof Module["preRun"] == "function")
-          Module["preRun"] = [Module["preRun"]];
-        while (Module["preRun"].length) {
-          addOnPreRun(Module["preRun"].shift());
+      if (Module['preRun']) {
+        if (typeof Module['preRun'] == 'function')
+          Module['preRun'] = [Module['preRun']];
+        while (Module['preRun'].length) {
+          addOnPreRun(Module['preRun'].shift());
         }
       }
       callRuntimeCallbacks(__ATPRERUN__);
@@ -550,7 +550,7 @@ var OpenSCAD = (() => {
       assert(!runtimeInitialized);
       runtimeInitialized = true;
       checkStackCookie();
-      if (!Module["noFSInit"] && !FS.init.initialized) FS.init();
+      if (!Module['noFSInit'] && !FS.init.initialized) FS.init();
       FS.ignorePermissions = false;
       TTY.init();
       SOCKFS.root = FS.mount(SOCKFS, {}, null);
@@ -574,11 +574,11 @@ var OpenSCAD = (() => {
 
     function postRun() {
       checkStackCookie();
-      if (Module["postRun"]) {
-        if (typeof Module["postRun"] == "function")
-          Module["postRun"] = [Module["postRun"]];
-        while (Module["postRun"].length) {
-          addOnPostRun(Module["postRun"].shift());
+      if (Module['postRun']) {
+        if (typeof Module['postRun'] == 'function')
+          Module['postRun'] = [Module['postRun']];
+        while (Module['postRun'].length) {
+          addOnPostRun(Module['postRun'].shift());
         }
       }
       callRuntimeCallbacks(__ATPOSTRUN__);
@@ -606,22 +606,22 @@ var OpenSCAD = (() => {
 
     assert(
       Math.imul,
-      "This browser does not support Math.imul(), build with LEGACY_VM_SUPPORT or POLYFILL_OLD_MATH_FUNCTIONS to add in a polyfill"
+      'This browser does not support Math.imul(), build with LEGACY_VM_SUPPORT or POLYFILL_OLD_MATH_FUNCTIONS to add in a polyfill'
     );
 
     assert(
       Math.fround,
-      "This browser does not support Math.fround(), build with LEGACY_VM_SUPPORT or POLYFILL_OLD_MATH_FUNCTIONS to add in a polyfill"
+      'This browser does not support Math.fround(), build with LEGACY_VM_SUPPORT or POLYFILL_OLD_MATH_FUNCTIONS to add in a polyfill'
     );
 
     assert(
       Math.clz32,
-      "This browser does not support Math.clz32(), build with LEGACY_VM_SUPPORT or POLYFILL_OLD_MATH_FUNCTIONS to add in a polyfill"
+      'This browser does not support Math.clz32(), build with LEGACY_VM_SUPPORT or POLYFILL_OLD_MATH_FUNCTIONS to add in a polyfill'
     );
 
     assert(
       Math.trunc,
-      "This browser does not support Math.trunc(), build with LEGACY_VM_SUPPORT or POLYFILL_OLD_MATH_FUNCTIONS to add in a polyfill"
+      'This browser does not support Math.trunc(), build with LEGACY_VM_SUPPORT or POLYFILL_OLD_MATH_FUNCTIONS to add in a polyfill'
     );
 
     var runDependencies = 0;
@@ -642,15 +642,15 @@ var OpenSCAD = (() => {
 
     function addRunDependency(id) {
       runDependencies++;
-      if (Module["monitorRunDependencies"]) {
-        Module["monitorRunDependencies"](runDependencies);
+      if (Module['monitorRunDependencies']) {
+        Module['monitorRunDependencies'](runDependencies);
       }
       if (id) {
         assert(!runDependencyTracking[id]);
         runDependencyTracking[id] = 1;
         if (
           runDependencyWatcher === null &&
-          typeof setInterval != "undefined"
+          typeof setInterval != 'undefined'
         ) {
           runDependencyWatcher = setInterval(function () {
             if (ABORT) {
@@ -662,30 +662,30 @@ var OpenSCAD = (() => {
             for (var dep in runDependencyTracking) {
               if (!shown) {
                 shown = true;
-                err("still waiting on run dependencies:");
+                err('still waiting on run dependencies:');
               }
-              err("dependency: " + dep);
+              err('dependency: ' + dep);
             }
             if (shown) {
-              err("(end of list)");
+              err('(end of list)');
             }
           }, 1e4);
         }
       } else {
-        err("warning: run dependency added without ID");
+        err('warning: run dependency added without ID');
       }
     }
 
     function removeRunDependency(id) {
       runDependencies--;
-      if (Module["monitorRunDependencies"]) {
-        Module["monitorRunDependencies"](runDependencies);
+      if (Module['monitorRunDependencies']) {
+        Module['monitorRunDependencies'](runDependencies);
       }
       if (id) {
         assert(runDependencyTracking[id]);
         delete runDependencyTracking[id];
       } else {
-        err("warning: run dependency removed without ID");
+        err('warning: run dependency removed without ID');
       }
       if (runDependencies == 0) {
         if (runDependencyWatcher !== null) {
@@ -701,10 +701,10 @@ var OpenSCAD = (() => {
     }
 
     function abort(what) {
-      if (Module["onAbort"]) {
-        Module["onAbort"](what);
+      if (Module['onAbort']) {
+        Module['onAbort'](what);
       }
-      what = "Aborted(" + what + ")";
+      what = 'Aborted(' + what + ')';
       err(what);
       ABORT = true;
       EXITSTATUS = 1;
@@ -713,14 +713,14 @@ var OpenSCAD = (() => {
       throw e;
     }
 
-    var dataURIPrefix = "data:application/octet-stream;base64,";
+    var dataURIPrefix = 'data:application/octet-stream;base64,';
 
     function isDataURI(filename) {
       return filename.startsWith(dataURIPrefix);
     }
 
     function isFileURI(filename) {
-      return filename.startsWith("file://");
+      return filename.startsWith('file://');
     }
 
     function createExportWrapper(name, fixedasm) {
@@ -728,24 +728,24 @@ var OpenSCAD = (() => {
         var displayName = name;
         var asm = fixedasm;
         if (!fixedasm) {
-          asm = Module["asm"];
+          asm = Module['asm'];
         }
         assert(
           runtimeInitialized,
-          "native function `" +
+          'native function `' +
             displayName +
-            "` called before runtime initialization"
+            '` called before runtime initialization'
         );
         assert(
           !runtimeExited,
-          "native function `" +
+          'native function `' +
             displayName +
-            "` called after runtime exit (use NO_EXIT_RUNTIME to keep it alive after main() exits)"
+            '` called after runtime exit (use NO_EXIT_RUNTIME to keep it alive after main() exits)'
         );
         if (!asm[name]) {
           assert(
             asm[name],
-            "exported native function `" + displayName + "` not found"
+            'exported native function `' + displayName + '` not found'
           );
         }
         return asm[name].apply(null, arguments);
@@ -770,7 +770,7 @@ var OpenSCAD = (() => {
     function makeAbortWrapper(original) {
       return function () {
         if (ABORT) {
-          throw "program has already aborted!";
+          throw 'program has already aborted!';
         }
         abortWrapperDepth += 1;
         try {
@@ -780,11 +780,11 @@ var OpenSCAD = (() => {
             ABORT ||
             abortWrapperDepth > 1 ||
             e instanceof EmscriptenSjLj ||
-            e === "unwind"
+            e === 'unwind'
           ) {
             throw e;
           }
-          abort("unhandled exception: " + [e, e.stack]);
+          abort('unhandled exception: ' + [e, e.stack]);
         } finally {
           abortWrapperDepth -= 1;
         }
@@ -795,7 +795,7 @@ var OpenSCAD = (() => {
       var instExports = {};
       for (var name in exports) {
         var original = exports[name];
-        if (typeof original == "function") {
+        if (typeof original == 'function') {
           instExports[name] = makeAbortWrapper(original);
         } else {
           instExports[name] = original;
@@ -822,13 +822,13 @@ var OpenSCAD = (() => {
 
     var wasmBinaryFile;
 
-    if (Module["locateFile"]) {
-      wasmBinaryFile = "openscad.wasm";
+    if (Module['locateFile']) {
+      wasmBinaryFile = 'openscad.wasm';
       if (!isDataURI(wasmBinaryFile)) {
         wasmBinaryFile = locateFile(wasmBinaryFile);
       }
     } else {
-      wasmBinaryFile = new URL("openscad.wasm", import.meta.url).href;
+      wasmBinaryFile = new URL('openscad.wasm', import.meta.url).href;
     }
 
     function getBinary(file) {
@@ -839,7 +839,7 @@ var OpenSCAD = (() => {
         if (readBinary) {
           return readBinary(file);
         }
-        throw "both async and sync fetching of the wasm failed";
+        throw 'both async and sync fetching of the wasm failed';
       } catch (err) {
         abort(err);
       }
@@ -847,15 +847,15 @@ var OpenSCAD = (() => {
 
     function getBinaryPromise(binaryFile) {
       if (!wasmBinary && (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER)) {
-        if (typeof fetch == "function") {
+        if (typeof fetch == 'function') {
           return fetch(binaryFile, {
-            credentials: "same-origin",
+            credentials: 'same-origin',
           })
             .then(function (response) {
-              if (!response["ok"]) {
+              if (!response['ok']) {
                 throw "failed to load wasm binary file at '" + binaryFile + "'";
               }
-              return response["arrayBuffer"]();
+              return response['arrayBuffer']();
             })
             .catch(function () {
               return getBinary(binaryFile);
@@ -876,12 +876,12 @@ var OpenSCAD = (() => {
           return instance;
         })
         .then(receiver, function (reason) {
-          err("failed to asynchronously prepare wasm: " + reason);
+          err('failed to asynchronously prepare wasm: ' + reason);
           if (isFileURI(wasmBinaryFile)) {
             err(
-              "warning: Loading from a file URI (" +
+              'warning: Loading from a file URI (' +
                 wasmBinaryFile +
-                ") is not supported in most browsers. See https://emscripten.org/docs/getting_started/FAQ.html#how-do-i-run-a-local-webserver-for-testing-why-does-my-program-stall-in-downloading-or-preparing"
+                ') is not supported in most browsers. See https://emscripten.org/docs/getting_started/FAQ.html#how-do-i-run-a-local-webserver-for-testing-why-does-my-program-stall-in-downloading-or-preparing'
             );
           }
           abort(reason);
@@ -891,17 +891,17 @@ var OpenSCAD = (() => {
     function instantiateAsync(binary, binaryFile, imports, callback) {
       if (
         !binary &&
-        typeof WebAssembly.instantiateStreaming == "function" &&
+        typeof WebAssembly.instantiateStreaming == 'function' &&
         !isDataURI(binaryFile) &&
-        typeof fetch == "function"
+        typeof fetch == 'function'
       ) {
         return fetch(binaryFile, {
-          credentials: "same-origin",
+          credentials: 'same-origin',
         }).then(function (response) {
           var result = WebAssembly.instantiateStreaming(response, imports);
           return result.then(callback, function (reason) {
-            err("wasm streaming compile failed: " + reason);
-            err("falling back to ArrayBuffer instantiation");
+            err('wasm streaming compile failed: ' + reason);
+            err('falling back to ArrayBuffer instantiation');
             return instantiateArrayBuffer(binaryFile, imports, callback);
           });
         });
@@ -918,32 +918,32 @@ var OpenSCAD = (() => {
       function receiveInstance(instance, module) {
         var exports = instance.exports;
         exports = instrumentWasmExportsWithAbort(exports);
-        Module["asm"] = exports;
-        wasmMemory = Module["asm"]["memory"];
-        assert(wasmMemory, "memory not found in wasm exports");
+        Module['asm'] = exports;
+        wasmMemory = Module['asm']['memory'];
+        assert(wasmMemory, 'memory not found in wasm exports');
         updateMemoryViews();
-        wasmTable = Module["asm"]["__indirect_function_table"];
-        assert(wasmTable, "table not found in wasm exports");
-        addOnInit(Module["asm"]["__wasm_call_ctors"]);
+        wasmTable = Module['asm']['__indirect_function_table'];
+        assert(wasmTable, 'table not found in wasm exports');
+        addOnInit(Module['asm']['__wasm_call_ctors']);
         instrumentWasmTableWithAbort();
-        removeRunDependency("wasm-instantiate");
+        removeRunDependency('wasm-instantiate');
         return exports;
       }
-      addRunDependency("wasm-instantiate");
+      addRunDependency('wasm-instantiate');
       var trueModule = Module;
       function receiveInstantiationResult(result) {
         assert(
           Module === trueModule,
-          "the Module object should not be replaced during async compilation - perhaps the order of HTML elements is wrong?"
+          'the Module object should not be replaced during async compilation - perhaps the order of HTML elements is wrong?'
         );
         trueModule = null;
-        receiveInstance(result["instance"]);
+        receiveInstance(result['instance']);
       }
-      if (Module["instantiateWasm"]) {
+      if (Module['instantiateWasm']) {
         try {
-          return Module["instantiateWasm"](info, receiveInstance);
+          return Module['instantiateWasm'](info, receiveInstance);
         } catch (e) {
-          err("Module.instantiateWasm callback failed with error: " + e);
+          err('Module.instantiateWasm callback failed with error: ' + e);
           readyPromiseReject(e);
         }
       }
@@ -966,11 +966,11 @@ var OpenSCAD = (() => {
           configurable: true,
           get: function () {
             abort(
-              "Module." +
+              'Module.' +
                 prop +
-                " has been replaced with plain " +
+                ' has been replaced with plain ' +
                 newName +
-                " (the initial value can be provided on Module, but after startup the value is only looked for on a local variable of that name)"
+                ' (the initial value can be provided on Module, but after startup the value is only looked for on a local variable of that name)'
             );
           },
         });
@@ -980,35 +980,35 @@ var OpenSCAD = (() => {
     function ignoredModuleProp(prop) {
       if (Object.getOwnPropertyDescriptor(Module, prop)) {
         abort(
-          "`Module." +
+          '`Module.' +
             prop +
-            "` was supplied but `" +
+            '` was supplied but `' +
             prop +
-            "` not included in INCOMING_MODULE_JS_API"
+            '` not included in INCOMING_MODULE_JS_API'
         );
       }
     }
 
     function isExportedByForceFilesystem(name) {
       return (
-        name === "FS_createPath" ||
-        name === "FS_createDataFile" ||
-        name === "FS_createPreloadedFile" ||
-        name === "FS_unlink" ||
-        name === "addRunDependency" ||
-        name === "FS_createLazyFile" ||
-        name === "FS_createDevice" ||
-        name === "removeRunDependency"
+        name === 'FS_createPath' ||
+        name === 'FS_createDataFile' ||
+        name === 'FS_createPreloadedFile' ||
+        name === 'FS_unlink' ||
+        name === 'addRunDependency' ||
+        name === 'FS_createLazyFile' ||
+        name === 'FS_createDevice' ||
+        name === 'removeRunDependency'
       );
     }
 
     function missingGlobal(sym, msg) {
-      if (typeof globalThis !== "undefined") {
+      if (typeof globalThis !== 'undefined') {
         Object.defineProperty(globalThis, sym, {
           configurable: true,
           get: function () {
             warnOnce(
-              "`" + sym + "` is not longer defined by emscripten. " + msg
+              '`' + sym + '` is not longer defined by emscripten. ' + msg
             );
             return undefined;
           },
@@ -1016,31 +1016,31 @@ var OpenSCAD = (() => {
       }
     }
 
-    missingGlobal("buffer", "Please use HEAP8.buffer or wasmMemory.buffer");
+    missingGlobal('buffer', 'Please use HEAP8.buffer or wasmMemory.buffer');
 
     function missingLibrarySymbol(sym) {
       if (
-        typeof globalThis !== "undefined" &&
+        typeof globalThis !== 'undefined' &&
         !Object.getOwnPropertyDescriptor(globalThis, sym)
       ) {
         Object.defineProperty(globalThis, sym, {
           configurable: true,
           get: function () {
             var msg =
-              "`" +
+              '`' +
               sym +
-              "` is a library symbol and not included by default; add it to your library.js __deps or to DEFAULT_LIBRARY_FUNCS_TO_INCLUDE on the command line";
+              '` is a library symbol and not included by default; add it to your library.js __deps or to DEFAULT_LIBRARY_FUNCS_TO_INCLUDE on the command line';
             var librarySymbol = sym;
-            if (!librarySymbol.startsWith("_")) {
-              librarySymbol = "$" + sym;
+            if (!librarySymbol.startsWith('_')) {
+              librarySymbol = '$' + sym;
             }
             msg +=
-              " (e.g. -sDEFAULT_LIBRARY_FUNCS_TO_INCLUDE=" +
+              ' (e.g. -sDEFAULT_LIBRARY_FUNCS_TO_INCLUDE=' +
               librarySymbol +
-              ")";
+              ')';
             if (isExportedByForceFilesystem(sym)) {
               msg +=
-                ". Alternatively, forcing filesystem support (-sFORCE_FILESYSTEM) can export this for you";
+                '. Alternatively, forcing filesystem support (-sFORCE_FILESYSTEM) can export this for you';
             }
             warnOnce(msg);
             return undefined;
@@ -1061,7 +1061,7 @@ var OpenSCAD = (() => {
               "' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)";
             if (isExportedByForceFilesystem(sym)) {
               msg +=
-                ". Alternatively, forcing filesystem support (-sFORCE_FILESYSTEM) can export this for you";
+                '. Alternatively, forcing filesystem support (-sFORCE_FILESYSTEM) can export this for you';
             }
             abort(msg);
           },
@@ -1074,8 +1074,8 @@ var OpenSCAD = (() => {
     }
 
     function ExitStatus(status) {
-      this.name = "ExitStatus";
-      this.message = "Program terminated with exit(" + status + ")";
+      this.name = 'ExitStatus';
+      this.message = 'Program terminated with exit(' + status + ')';
       this.status = status;
     }
 
@@ -1096,7 +1096,7 @@ var OpenSCAD = (() => {
       }
       assert(
         wasmTable.get(funcPtr) == func,
-        "JavaScript-side Wasm function table mirror is out of date!"
+        'JavaScript-side Wasm function table mirror is out of date!'
       );
       return func;
     }
@@ -1216,37 +1216,37 @@ var OpenSCAD = (() => {
       return getExceptionMessageCommon(ptr);
     }
 
-    Module["getExceptionMessage"] = getExceptionMessage;
+    Module['getExceptionMessage'] = getExceptionMessage;
 
-    function getValue(ptr, type = "i8") {
-      if (type.endsWith("*")) type = "*";
+    function getValue(ptr, type = 'i8') {
+      if (type.endsWith('*')) type = '*';
       switch (type) {
-        case "i1":
+        case 'i1':
           return HEAP8[ptr >>> 0];
 
-        case "i8":
+        case 'i8':
           return HEAP8[ptr >>> 0];
 
-        case "i16":
+        case 'i16':
           return HEAP16[ptr >>> 1];
 
-        case "i32":
+        case 'i32':
           return HEAP32[ptr >>> 2];
 
-        case "i64":
+        case 'i64':
           return HEAP32[ptr >>> 2];
 
-        case "float":
+        case 'float':
           return HEAPF32[ptr >>> 2];
 
-        case "double":
+        case 'double':
           return HEAPF64[ptr >>> 3];
 
-        case "*":
+        case '*':
           return HEAPU32[ptr >>> 2];
 
         default:
-          abort("invalid type for getValue: " + type);
+          abort('invalid type for getValue: ' + type);
       }
     }
 
@@ -1264,30 +1264,30 @@ var OpenSCAD = (() => {
     }
 
     function ptrToString(ptr) {
-      assert(typeof ptr === "number");
-      return "0x" + ptr.toString(16).padStart(8, "0");
+      assert(typeof ptr === 'number');
+      return '0x' + ptr.toString(16).padStart(8, '0');
     }
 
-    function setValue(ptr, value, type = "i8") {
-      if (type.endsWith("*")) type = "*";
+    function setValue(ptr, value, type = 'i8') {
+      if (type.endsWith('*')) type = '*';
       switch (type) {
-        case "i1":
+        case 'i1':
           HEAP8[ptr >>> 0] = value;
           break;
 
-        case "i8":
+        case 'i8':
           HEAP8[ptr >>> 0] = value;
           break;
 
-        case "i16":
+        case 'i16':
           HEAP16[ptr >>> 1] = value;
           break;
 
-        case "i32":
+        case 'i32':
           HEAP32[ptr >>> 2] = value;
           break;
 
-        case "i64":
+        case 'i64':
           (tempI64 = [
             value >>> 0,
             ((tempDouble = value),
@@ -1305,20 +1305,20 @@ var OpenSCAD = (() => {
             (HEAP32[(ptr + 4) >>> 2] = tempI64[1]);
           break;
 
-        case "float":
+        case 'float':
           HEAPF32[ptr >>> 2] = value;
           break;
 
-        case "double":
+        case 'double':
           HEAPF64[ptr >>> 3] = value;
           break;
 
-        case "*":
+        case '*':
           HEAPU32[ptr >>> 2] = value;
           break;
 
         default:
-          abort("invalid type for setValue: " + type);
+          abort('invalid type for setValue: ' + type);
       }
     }
 
@@ -1332,13 +1332,13 @@ var OpenSCAD = (() => {
 
     function ___assert_fail(condition, filename, line, func) {
       abort(
-        "Assertion failed: " +
+        'Assertion failed: ' +
           UTF8ToString(condition) +
-          ", at: " +
+          ', at: ' +
           [
-            filename ? UTF8ToString(filename) : "unknown filename",
+            filename ? UTF8ToString(filename) : 'unknown filename',
             line,
-            func ? UTF8ToString(func) : "unknown function",
+            func ? UTF8ToString(func) : 'unknown function',
           ]
       );
     }
@@ -1428,7 +1428,7 @@ var OpenSCAD = (() => {
     function ___cxa_rethrow() {
       var info = exceptionCaught.pop();
       if (!info) {
-        abort("no exception to throw");
+        abort('no exception to throw');
       }
       var ptr = info.excPtr;
       if (!info.get_rethrown()) {
@@ -1454,7 +1454,7 @@ var OpenSCAD = (() => {
     }
 
     var PATH = {
-      isAbs: (path) => path.charAt(0) === "/",
+      isAbs: (path) => path.charAt(0) === '/',
       splitPath: (filename) => {
         var splitPathRe =
           /^(\/?|)([\s\S]*?)((?:\.{1,2}|[^\/]+?|)(\.[^.\/]*|))(?:[\/]*)$/;
@@ -1464,9 +1464,9 @@ var OpenSCAD = (() => {
         var up = 0;
         for (var i = parts.length - 1; i >= 0; i--) {
           var last = parts[i];
-          if (last === ".") {
+          if (last === '.') {
             parts.splice(i, 1);
-          } else if (last === "..") {
+          } else if (last === '..') {
             parts.splice(i, 1);
             up++;
           } else if (up) {
@@ -1476,32 +1476,32 @@ var OpenSCAD = (() => {
         }
         if (allowAboveRoot) {
           for (; up; up--) {
-            parts.unshift("..");
+            parts.unshift('..');
           }
         }
         return parts;
       },
       normalize: (path) => {
         var isAbsolute = PATH.isAbs(path),
-          trailingSlash = path.substr(-1) === "/";
+          trailingSlash = path.substr(-1) === '/';
         path = PATH.normalizeArray(
-          path.split("/").filter((p) => !!p),
+          path.split('/').filter((p) => !!p),
           !isAbsolute
-        ).join("/");
+        ).join('/');
         if (!path && !isAbsolute) {
-          path = ".";
+          path = '.';
         }
         if (path && trailingSlash) {
-          path += "/";
+          path += '/';
         }
-        return (isAbsolute ? "/" : "") + path;
+        return (isAbsolute ? '/' : '') + path;
       },
       dirname: (path) => {
         var result = PATH.splitPath(path),
           root = result[0],
           dir = result[1];
         if (!root && !dir) {
-          return ".";
+          return '.';
         }
         if (dir) {
           dir = dir.substr(0, dir.length - 1);
@@ -1509,26 +1509,26 @@ var OpenSCAD = (() => {
         return root + dir;
       },
       basename: (path) => {
-        if (path === "/") return "/";
+        if (path === '/') return '/';
         path = PATH.normalize(path);
-        path = path.replace(/\/$/, "");
-        var lastSlash = path.lastIndexOf("/");
+        path = path.replace(/\/$/, '');
+        var lastSlash = path.lastIndexOf('/');
         if (lastSlash === -1) return path;
         return path.substr(lastSlash + 1);
       },
       join: function () {
         var paths = Array.prototype.slice.call(arguments);
-        return PATH.normalize(paths.join("/"));
+        return PATH.normalize(paths.join('/'));
       },
       join2: (l, r) => {
-        return PATH.normalize(l + "/" + r);
+        return PATH.normalize(l + '/' + r);
       },
     };
 
     function getRandomDevice() {
       if (
-        typeof crypto == "object" &&
-        typeof crypto["getRandomValues"] == "function"
+        typeof crypto == 'object' &&
+        typeof crypto['getRandomValues'] == 'function'
       ) {
         var randomBuffer = new Uint8Array(1);
         return () => {
@@ -1538,29 +1538,29 @@ var OpenSCAD = (() => {
       } else
         return () =>
           abort(
-            "no cryptographic support found for randomDevice. consider polyfilling it if you want to use something insecure like Math.random(), e.g. put this in a --pre-js: var crypto = { getRandomValues: function(array) { for (var i = 0; i < array.length; i++) array[i] = (Math.random()*256)|0 } };"
+            'no cryptographic support found for randomDevice. consider polyfilling it if you want to use something insecure like Math.random(), e.g. put this in a --pre-js: var crypto = { getRandomValues: function(array) { for (var i = 0; i < array.length; i++) array[i] = (Math.random()*256)|0 } };'
           );
     }
 
     var PATH_FS = {
       resolve: function () {
-        var resolvedPath = "",
+        var resolvedPath = '',
           resolvedAbsolute = false;
         for (var i = arguments.length - 1; i >= -1 && !resolvedAbsolute; i--) {
           var path = i >= 0 ? arguments[i] : FS.cwd();
-          if (typeof path != "string") {
-            throw new TypeError("Arguments to path.resolve must be strings");
+          if (typeof path != 'string') {
+            throw new TypeError('Arguments to path.resolve must be strings');
           } else if (!path) {
-            return "";
+            return '';
           }
-          resolvedPath = path + "/" + resolvedPath;
+          resolvedPath = path + '/' + resolvedPath;
           resolvedAbsolute = PATH.isAbs(path);
         }
         resolvedPath = PATH.normalizeArray(
-          resolvedPath.split("/").filter((p) => !!p),
+          resolvedPath.split('/').filter((p) => !!p),
           !resolvedAbsolute
-        ).join("/");
-        return (resolvedAbsolute ? "/" : "") + resolvedPath || ".";
+        ).join('/');
+        return (resolvedAbsolute ? '/' : '') + resolvedPath || '.';
       },
       relative: (from, to) => {
         from = PATH_FS.resolve(from).substr(1);
@@ -1568,17 +1568,17 @@ var OpenSCAD = (() => {
         function trim(arr) {
           var start = 0;
           for (; start < arr.length; start++) {
-            if (arr[start] !== "") break;
+            if (arr[start] !== '') break;
           }
           var end = arr.length - 1;
           for (; end >= 0; end--) {
-            if (arr[end] !== "") break;
+            if (arr[end] !== '') break;
           }
           if (start > end) return [];
           return arr.slice(start, end - start + 1);
         }
-        var fromParts = trim(from.split("/"));
-        var toParts = trim(to.split("/"));
+        var fromParts = trim(from.split('/'));
+        var toParts = trim(to.split('/'));
         var length = Math.min(fromParts.length, toParts.length);
         var samePartsLength = length;
         for (var i = 0; i < length; i++) {
@@ -1589,10 +1589,10 @@ var OpenSCAD = (() => {
         }
         var outputParts = [];
         for (var i = samePartsLength; i < fromParts.length; i++) {
-          outputParts.push("..");
+          outputParts.push('..');
         }
         outputParts = outputParts.concat(toParts.slice(samePartsLength));
-        return outputParts.join("/");
+        return outputParts.join('/');
       },
     };
 
@@ -1682,17 +1682,17 @@ var OpenSCAD = (() => {
           if (!tty.input.length) {
             var result = null;
             if (
-              typeof window != "undefined" &&
-              typeof window.prompt == "function"
+              typeof window != 'undefined' &&
+              typeof window.prompt == 'function'
             ) {
-              result = window.prompt("Input: ");
+              result = window.prompt('Input: ');
               if (result !== null) {
-                result += "\n";
+                result += '\n';
               }
-            } else if (typeof readline == "function") {
+            } else if (typeof readline == 'function') {
               result = readline();
               if (result !== null) {
-                result += "\n";
+                result += '\n';
               }
             }
             if (!result) {
@@ -1741,7 +1741,7 @@ var OpenSCAD = (() => {
     }
 
     function alignMemory(size, alignment) {
-      assert(alignment, "alignment argument is required");
+      assert(alignment, 'alignment argument is required');
       return Math.ceil(size / alignment) * alignment;
     }
 
@@ -1755,7 +1755,7 @@ var OpenSCAD = (() => {
     var MEMFS = {
       ops_table: null,
       mount: function (mount) {
-        return MEMFS.createNode(null, "/", 16384 | 511, 0);
+        return MEMFS.createNode(null, '/', 16384 | 511, 0);
       },
       createNode: function (parent, name, mode, dev) {
         if (FS.isBlkdev(mode) || FS.isFIFO(mode)) {
@@ -1949,7 +1949,7 @@ var OpenSCAD = (() => {
           parent.timestamp = Date.now();
         },
         readdir: function (node) {
-          var entries = [".", ".."];
+          var entries = ['.', '..'];
           for (var key in node.contents) {
             if (!node.contents.hasOwnProperty(key)) {
               continue;
@@ -1996,7 +1996,7 @@ var OpenSCAD = (() => {
             if (canOwn) {
               assert(
                 position === 0,
-                "canOwn must imply no weird position inside the file"
+                'canOwn must imply no weird position inside the file'
               );
               node.contents = buffer.subarray(offset, offset + length);
               node.usedBytes = length;
@@ -2091,7 +2091,7 @@ var OpenSCAD = (() => {
     };
 
     function asyncLoad(url, onload, onerror, noRunDep) {
-      var dep = !noRunDep ? getUniqueRunDependency("al " + url) : "";
+      var dep = !noRunDep ? getUniqueRunDependency('al ' + url) : '';
       readAsync(
         url,
         (arrayBuffer) => {
@@ -2114,132 +2114,132 @@ var OpenSCAD = (() => {
     }
 
     var ERRNO_MESSAGES = {
-      0: "Success",
-      1: "Arg list too long",
-      2: "Permission denied",
-      3: "Address already in use",
-      4: "Address not available",
-      5: "Address family not supported by protocol family",
-      6: "No more processes",
-      7: "Socket already connected",
-      8: "Bad file number",
-      9: "Trying to read unreadable message",
-      10: "Mount device busy",
-      11: "Operation canceled",
-      12: "No children",
-      13: "Connection aborted",
-      14: "Connection refused",
-      15: "Connection reset by peer",
-      16: "File locking deadlock error",
-      17: "Destination address required",
-      18: "Math arg out of domain of func",
-      19: "Quota exceeded",
-      20: "File exists",
-      21: "Bad address",
-      22: "File too large",
-      23: "Host is unreachable",
-      24: "Identifier removed",
-      25: "Illegal byte sequence",
-      26: "Connection already in progress",
-      27: "Interrupted system call",
-      28: "Invalid argument",
-      29: "I/O error",
-      30: "Socket is already connected",
-      31: "Is a directory",
-      32: "Too many symbolic links",
-      33: "Too many open files",
-      34: "Too many links",
-      35: "Message too long",
-      36: "Multihop attempted",
-      37: "File or path name too long",
-      38: "Network interface is not configured",
-      39: "Connection reset by network",
-      40: "Network is unreachable",
-      41: "Too many open files in system",
-      42: "No buffer space available",
-      43: "No such device",
-      44: "No such file or directory",
-      45: "Exec format error",
-      46: "No record locks available",
-      47: "The link has been severed",
-      48: "Not enough core",
-      49: "No message of desired type",
-      50: "Protocol not available",
-      51: "No space left on device",
-      52: "Function not implemented",
-      53: "Socket is not connected",
-      54: "Not a directory",
-      55: "Directory not empty",
-      56: "State not recoverable",
-      57: "Socket operation on non-socket",
-      59: "Not a typewriter",
-      60: "No such device or address",
-      61: "Value too large for defined data type",
-      62: "Previous owner died",
-      63: "Not super-user",
-      64: "Broken pipe",
-      65: "Protocol error",
-      66: "Unknown protocol",
-      67: "Protocol wrong type for socket",
-      68: "Math result not representable",
-      69: "Read only file system",
-      70: "Illegal seek",
-      71: "No such process",
-      72: "Stale file handle",
-      73: "Connection timed out",
-      74: "Text file busy",
-      75: "Cross-device link",
-      100: "Device not a stream",
-      101: "Bad font file fmt",
-      102: "Invalid slot",
-      103: "Invalid request code",
-      104: "No anode",
-      105: "Block device required",
-      106: "Channel number out of range",
-      107: "Level 3 halted",
-      108: "Level 3 reset",
-      109: "Link number out of range",
-      110: "Protocol driver not attached",
-      111: "No CSI structure available",
-      112: "Level 2 halted",
-      113: "Invalid exchange",
-      114: "Invalid request descriptor",
-      115: "Exchange full",
-      116: "No data (for no delay io)",
-      117: "Timer expired",
-      118: "Out of streams resources",
-      119: "Machine is not on the network",
-      120: "Package not installed",
-      121: "The object is remote",
-      122: "Advertise error",
-      123: "Srmount error",
-      124: "Communication error on send",
-      125: "Cross mount point (not really error)",
-      126: "Given log. name not unique",
-      127: "f.d. invalid for this operation",
-      128: "Remote address changed",
-      129: "Can   access a needed shared lib",
-      130: "Accessing a corrupted shared lib",
-      131: ".lib section in a.out corrupted",
-      132: "Attempting to link in too many libs",
-      133: "Attempting to exec a shared library",
-      135: "Streams pipe error",
-      136: "Too many users",
-      137: "Socket type not supported",
-      138: "Not supported",
-      139: "Protocol family not supported",
+      0: 'Success',
+      1: 'Arg list too long',
+      2: 'Permission denied',
+      3: 'Address already in use',
+      4: 'Address not available',
+      5: 'Address family not supported by protocol family',
+      6: 'No more processes',
+      7: 'Socket already connected',
+      8: 'Bad file number',
+      9: 'Trying to read unreadable message',
+      10: 'Mount device busy',
+      11: 'Operation canceled',
+      12: 'No children',
+      13: 'Connection aborted',
+      14: 'Connection refused',
+      15: 'Connection reset by peer',
+      16: 'File locking deadlock error',
+      17: 'Destination address required',
+      18: 'Math arg out of domain of func',
+      19: 'Quota exceeded',
+      20: 'File exists',
+      21: 'Bad address',
+      22: 'File too large',
+      23: 'Host is unreachable',
+      24: 'Identifier removed',
+      25: 'Illegal byte sequence',
+      26: 'Connection already in progress',
+      27: 'Interrupted system call',
+      28: 'Invalid argument',
+      29: 'I/O error',
+      30: 'Socket is already connected',
+      31: 'Is a directory',
+      32: 'Too many symbolic links',
+      33: 'Too many open files',
+      34: 'Too many links',
+      35: 'Message too long',
+      36: 'Multihop attempted',
+      37: 'File or path name too long',
+      38: 'Network interface is not configured',
+      39: 'Connection reset by network',
+      40: 'Network is unreachable',
+      41: 'Too many open files in system',
+      42: 'No buffer space available',
+      43: 'No such device',
+      44: 'No such file or directory',
+      45: 'Exec format error',
+      46: 'No record locks available',
+      47: 'The link has been severed',
+      48: 'Not enough core',
+      49: 'No message of desired type',
+      50: 'Protocol not available',
+      51: 'No space left on device',
+      52: 'Function not implemented',
+      53: 'Socket is not connected',
+      54: 'Not a directory',
+      55: 'Directory not empty',
+      56: 'State not recoverable',
+      57: 'Socket operation on non-socket',
+      59: 'Not a typewriter',
+      60: 'No such device or address',
+      61: 'Value too large for defined data type',
+      62: 'Previous owner died',
+      63: 'Not super-user',
+      64: 'Broken pipe',
+      65: 'Protocol error',
+      66: 'Unknown protocol',
+      67: 'Protocol wrong type for socket',
+      68: 'Math result not representable',
+      69: 'Read only file system',
+      70: 'Illegal seek',
+      71: 'No such process',
+      72: 'Stale file handle',
+      73: 'Connection timed out',
+      74: 'Text file busy',
+      75: 'Cross-device link',
+      100: 'Device not a stream',
+      101: 'Bad font file fmt',
+      102: 'Invalid slot',
+      103: 'Invalid request code',
+      104: 'No anode',
+      105: 'Block device required',
+      106: 'Channel number out of range',
+      107: 'Level 3 halted',
+      108: 'Level 3 reset',
+      109: 'Link number out of range',
+      110: 'Protocol driver not attached',
+      111: 'No CSI structure available',
+      112: 'Level 2 halted',
+      113: 'Invalid exchange',
+      114: 'Invalid request descriptor',
+      115: 'Exchange full',
+      116: 'No data (for no delay io)',
+      117: 'Timer expired',
+      118: 'Out of streams resources',
+      119: 'Machine is not on the network',
+      120: 'Package not installed',
+      121: 'The object is remote',
+      122: 'Advertise error',
+      123: 'Srmount error',
+      124: 'Communication error on send',
+      125: 'Cross mount point (not really error)',
+      126: 'Given log. name not unique',
+      127: 'f.d. invalid for this operation',
+      128: 'Remote address changed',
+      129: 'Can   access a needed shared lib',
+      130: 'Accessing a corrupted shared lib',
+      131: '.lib section in a.out corrupted',
+      132: 'Attempting to link in too many libs',
+      133: 'Attempting to exec a shared library',
+      135: 'Streams pipe error',
+      136: 'Too many users',
+      137: 'Socket type not supported',
+      138: 'Not supported',
+      139: 'Protocol family not supported',
       140: "Can't send after socket shutdown",
-      141: "Too many references",
-      142: "Host is down",
-      148: "No medium (in tape drive)",
-      156: "Level 2 not synchronized",
+      141: 'Too many references',
+      142: 'Host is down',
+      148: 'No medium (in tape drive)',
+      156: 'Level 2 not synchronized',
     };
 
     var ERRNO_CODES = {};
 
     function demangle(func) {
       warnOnce(
-        "warning: build with -sDEMANGLE_SUPPORT to link in libcxxabi demangling"
+        'warning: build with -sDEMANGLE_SUPPORT to link in libcxxabi demangling'
       );
       return func;
     }
@@ -2248,7 +2248,7 @@ var OpenSCAD = (() => {
       var regex = /\b_Z[\w\d_]+/g;
       return text.replace(regex, function (x) {
         var y = demangle(x);
-        return x === y ? x : y + " [" + x + "]";
+        return x === y ? x : y + ' [' + x + ']';
       });
     }
 
@@ -2259,7 +2259,7 @@ var OpenSCAD = (() => {
       streams: [],
       nextInode: 1,
       nameTable: null,
-      currentPath: "/",
+      currentPath: '/',
       initialized: false,
       ignorePermissions: true,
       ErrnoError: null,
@@ -2270,7 +2270,7 @@ var OpenSCAD = (() => {
         path = PATH_FS.resolve(path);
         if (!path)
           return {
-            path: "",
+            path: '',
             node: null,
           };
         var defaults = {
@@ -2281,9 +2281,9 @@ var OpenSCAD = (() => {
         if (opts.recurse_count > 8) {
           throw new FS.ErrnoError(32);
         }
-        var parts = path.split("/").filter((p) => !!p);
+        var parts = path.split('/').filter((p) => !!p);
         var current = FS.root;
-        var current_path = "/";
+        var current_path = '/';
         for (var i = 0; i < parts.length; i++) {
           var islast = i === parts.length - 1;
           if (islast && opts.parent) {
@@ -2322,11 +2322,11 @@ var OpenSCAD = (() => {
           if (FS.isRoot(node)) {
             var mount = node.mount.mountpoint;
             if (!path) return mount;
-            return mount[mount.length - 1] !== "/"
-              ? mount + "/" + path
+            return mount[mount.length - 1] !== '/'
+              ? mount + '/' + path
               : mount + path;
           }
-          path = path ? node.name + "/" + path : node.name;
+          path = path ? node.name + '/' + path : node.name;
           node = node.parent;
         }
       },
@@ -2372,7 +2372,7 @@ var OpenSCAD = (() => {
         return FS.lookup(parent, name);
       },
       createNode: (parent, name, mode, rdev) => {
-        assert(typeof parent == "object");
+        assert(typeof parent == 'object');
         var node = new FS.FSNode(parent, name, mode, rdev);
         FS.hashAddNode(node);
         return node;
@@ -2409,23 +2409,23 @@ var OpenSCAD = (() => {
       },
       flagModes: {
         r: 0,
-        "r+": 2,
+        'r+': 2,
         w: 577,
-        "w+": 578,
+        'w+': 578,
         a: 1089,
-        "a+": 1090,
+        'a+': 1090,
       },
       modeStringToFlags: (str) => {
         var flags = FS.flagModes[str];
-        if (typeof flags == "undefined") {
-          throw new Error("Unknown file open mode: " + str);
+        if (typeof flags == 'undefined') {
+          throw new Error('Unknown file open mode: ' + str);
         }
         return flags;
       },
       flagsToPermissionString: (flag) => {
-        var perms = ["r", "w", "rw"][flag & 3];
+        var perms = ['r', 'w', 'rw'][flag & 3];
         if (flag & 512) {
-          perms += "w";
+          perms += 'w';
         }
         return perms;
       },
@@ -2433,17 +2433,17 @@ var OpenSCAD = (() => {
         if (FS.ignorePermissions) {
           return 0;
         }
-        if (perms.includes("r") && !(node.mode & 292)) {
+        if (perms.includes('r') && !(node.mode & 292)) {
           return 2;
-        } else if (perms.includes("w") && !(node.mode & 146)) {
+        } else if (perms.includes('w') && !(node.mode & 146)) {
           return 2;
-        } else if (perms.includes("x") && !(node.mode & 73)) {
+        } else if (perms.includes('x') && !(node.mode & 73)) {
           return 2;
         }
         return 0;
       },
       mayLookup: (dir) => {
-        var errCode = FS.nodePermissions(dir, "x");
+        var errCode = FS.nodePermissions(dir, 'x');
         if (errCode) return errCode;
         if (!dir.node_ops.lookup) return 2;
         return 0;
@@ -2453,7 +2453,7 @@ var OpenSCAD = (() => {
           var node = FS.lookupNode(dir, name);
           return 20;
         } catch (e) {}
-        return FS.nodePermissions(dir, "wx");
+        return FS.nodePermissions(dir, 'wx');
       },
       mayDelete: (dir, name, isdir) => {
         var node;
@@ -2462,7 +2462,7 @@ var OpenSCAD = (() => {
         } catch (e) {
           return e.errno;
         }
-        var errCode = FS.nodePermissions(dir, "wx");
+        var errCode = FS.nodePermissions(dir, 'wx');
         if (errCode) {
           return errCode;
         }
@@ -2487,7 +2487,7 @@ var OpenSCAD = (() => {
         if (FS.isLink(node.mode)) {
           return 32;
         } else if (FS.isDir(node.mode)) {
-          if (FS.flagsToPermissionString(flags) !== "r" || flags & 512) {
+          if (FS.flagsToPermissionString(flags) !== 'r' || flags & 512) {
             return 31;
           }
         }
@@ -2592,16 +2592,16 @@ var OpenSCAD = (() => {
         return mounts;
       },
       syncfs: (populate, callback) => {
-        if (typeof populate == "function") {
+        if (typeof populate == 'function') {
           callback = populate;
           populate = false;
         }
         FS.syncFSRequests++;
         if (FS.syncFSRequests > 1) {
           err(
-            "warning: " +
+            'warning: ' +
               FS.syncFSRequests +
-              " FS.syncfs operations in flight at once, probably just doing extra work"
+              ' FS.syncfs operations in flight at once, probably just doing extra work'
           );
         }
         var mounts = FS.getMounts(FS.root.mount);
@@ -2631,10 +2631,10 @@ var OpenSCAD = (() => {
         });
       },
       mount: (type, opts, mountpoint) => {
-        if (typeof type == "string") {
+        if (typeof type == 'string') {
           throw type;
         }
-        var root = mountpoint === "/";
+        var root = mountpoint === '/';
         var pseudo = !mountpoint;
         var node;
         if (root && FS.root) {
@@ -2705,7 +2705,7 @@ var OpenSCAD = (() => {
         });
         var parent = lookup.node;
         var name = PATH.basename(path);
-        if (!name || name === "." || name === "..") {
+        if (!name || name === '.' || name === '..') {
           throw new FS.ErrnoError(28);
         }
         var errCode = FS.mayCreate(parent, name);
@@ -2730,11 +2730,11 @@ var OpenSCAD = (() => {
         return FS.mknod(path, mode, 0);
       },
       mkdirTree: (path, mode) => {
-        var dirs = path.split("/");
-        var d = "";
+        var dirs = path.split('/');
+        var d = '';
         for (var i = 0; i < dirs.length; ++i) {
           if (!dirs[i]) continue;
-          d += "/" + dirs[i];
+          d += '/' + dirs[i];
           try {
             FS.mkdir(d, mode);
           } catch (e) {
@@ -2743,7 +2743,7 @@ var OpenSCAD = (() => {
         }
       },
       mkdev: (path, mode, dev) => {
-        if (typeof dev == "undefined") {
+        if (typeof dev == 'undefined') {
           dev = mode;
           mode = 438;
         }
@@ -2791,11 +2791,11 @@ var OpenSCAD = (() => {
         }
         var old_node = FS.lookupNode(old_dir, old_name);
         var relative = PATH_FS.relative(old_path, new_dirname);
-        if (relative.charAt(0) !== ".") {
+        if (relative.charAt(0) !== '.') {
           throw new FS.ErrnoError(28);
         }
         relative = PATH_FS.relative(new_path, old_dirname);
-        if (relative.charAt(0) !== ".") {
+        if (relative.charAt(0) !== '.') {
           throw new FS.ErrnoError(55);
         }
         var new_node;
@@ -2826,7 +2826,7 @@ var OpenSCAD = (() => {
           throw new FS.ErrnoError(10);
         }
         if (new_dir !== old_dir) {
-          errCode = FS.nodePermissions(old_dir, "w");
+          errCode = FS.nodePermissions(old_dir, 'w');
           if (errCode) {
             throw new FS.ErrnoError(errCode);
           }
@@ -2925,7 +2925,7 @@ var OpenSCAD = (() => {
       },
       chmod: (path, mode, dontFollow) => {
         var node;
-        if (typeof path == "string") {
+        if (typeof path == 'string') {
           var lookup = FS.lookupPath(path, {
             follow: !dontFollow,
           });
@@ -2953,7 +2953,7 @@ var OpenSCAD = (() => {
       },
       chown: (path, uid, gid, dontFollow) => {
         var node;
-        if (typeof path == "string") {
+        if (typeof path == 'string') {
           var lookup = FS.lookupPath(path, {
             follow: !dontFollow,
           });
@@ -2983,7 +2983,7 @@ var OpenSCAD = (() => {
           throw new FS.ErrnoError(28);
         }
         var node;
-        if (typeof path == "string") {
+        if (typeof path == 'string') {
           var lookup = FS.lookupPath(path, {
             follow: true,
           });
@@ -3000,7 +3000,7 @@ var OpenSCAD = (() => {
         if (!FS.isFile(node.mode)) {
           throw new FS.ErrnoError(28);
         }
-        var errCode = FS.nodePermissions(node, "w");
+        var errCode = FS.nodePermissions(node, 'w');
         if (errCode) {
           throw new FS.ErrnoError(errCode);
         }
@@ -3029,18 +3029,18 @@ var OpenSCAD = (() => {
         });
       },
       open: (path, flags, mode) => {
-        if (path === "") {
+        if (path === '') {
           throw new FS.ErrnoError(44);
         }
-        flags = typeof flags == "string" ? FS.modeStringToFlags(flags) : flags;
-        mode = typeof mode == "undefined" ? 438 : mode;
+        flags = typeof flags == 'string' ? FS.modeStringToFlags(flags) : flags;
+        mode = typeof mode == 'undefined' ? 438 : mode;
         if (flags & 64) {
           mode = (mode & 4095) | 32768;
         } else {
           mode = 0;
         }
         var node;
-        if (typeof path == "object") {
+        if (typeof path == 'object') {
           node = path;
         } else {
           path = PATH.normalize(path);
@@ -3094,7 +3094,7 @@ var OpenSCAD = (() => {
         if (stream.stream_ops.open) {
           stream.stream_ops.open(stream);
         }
-        if (Module["logReadFiles"] && !(flags & 1)) {
+        if (Module['logReadFiles'] && !(flags & 1)) {
           if (!FS.readFiles) FS.readFiles = {};
           if (!(path in FS.readFiles)) {
             FS.readFiles[path] = 1;
@@ -3152,7 +3152,7 @@ var OpenSCAD = (() => {
         if (!stream.stream_ops.read) {
           throw new FS.ErrnoError(28);
         }
-        var seeking = typeof position != "undefined";
+        var seeking = typeof position != 'undefined';
         if (!seeking) {
           position = stream.position;
         } else if (!stream.seekable) {
@@ -3188,7 +3188,7 @@ var OpenSCAD = (() => {
         if (stream.seekable && stream.flags & 1024) {
           FS.llseek(stream, 0, 2);
         }
-        var seeking = typeof position != "undefined";
+        var seeking = typeof position != 'undefined';
         if (!seeking) {
           position = stream.position;
         } else if (!stream.seekable) {
@@ -3261,8 +3261,8 @@ var OpenSCAD = (() => {
       },
       readFile: (path, opts = {}) => {
         opts.flags = opts.flags || 0;
-        opts.encoding = opts.encoding || "binary";
-        if (opts.encoding !== "utf8" && opts.encoding !== "binary") {
+        opts.encoding = opts.encoding || 'binary';
+        if (opts.encoding !== 'utf8' && opts.encoding !== 'binary') {
           throw new Error('Invalid encoding type "' + opts.encoding + '"');
         }
         var ret;
@@ -3271,9 +3271,9 @@ var OpenSCAD = (() => {
         var length = stat.size;
         var buf = new Uint8Array(length);
         FS.read(stream, buf, 0, length, 0);
-        if (opts.encoding === "utf8") {
+        if (opts.encoding === 'utf8') {
           ret = UTF8ArrayToString(buf, 0);
-        } else if (opts.encoding === "binary") {
+        } else if (opts.encoding === 'binary') {
           ret = buf;
         }
         FS.close(stream);
@@ -3282,14 +3282,14 @@ var OpenSCAD = (() => {
       writeFile: (path, data, opts = {}) => {
         opts.flags = opts.flags || 577;
         var stream = FS.open(path, opts.flags, opts.mode);
-        if (typeof data == "string") {
+        if (typeof data == 'string') {
           var buf = new Uint8Array(lengthBytesUTF8(data) + 1);
           var actualNumBytes = stringToUTF8Array(data, buf, 0, buf.length);
           FS.write(stream, buf, 0, actualNumBytes, undefined, opts.canOwn);
         } else if (ArrayBuffer.isView(data)) {
           FS.write(stream, data, 0, data.byteLength, undefined, opts.canOwn);
         } else {
-          throw new Error("Unsupported data type");
+          throw new Error('Unsupported data type');
         }
         FS.close(stream);
       },
@@ -3304,42 +3304,42 @@ var OpenSCAD = (() => {
         if (!FS.isDir(lookup.node.mode)) {
           throw new FS.ErrnoError(54);
         }
-        var errCode = FS.nodePermissions(lookup.node, "x");
+        var errCode = FS.nodePermissions(lookup.node, 'x');
         if (errCode) {
           throw new FS.ErrnoError(errCode);
         }
         FS.currentPath = lookup.path;
       },
       createDefaultDirectories: () => {
-        FS.mkdir("/tmp");
-        FS.mkdir("/home");
-        FS.mkdir("/home/web_user");
+        FS.mkdir('/tmp');
+        FS.mkdir('/home');
+        FS.mkdir('/home/web_user');
       },
       createDefaultDevices: () => {
-        FS.mkdir("/dev");
+        FS.mkdir('/dev');
         FS.registerDevice(FS.makedev(1, 3), {
           read: () => 0,
           write: (stream, buffer, offset, length, pos) => length,
         });
-        FS.mkdev("/dev/null", FS.makedev(1, 3));
+        FS.mkdev('/dev/null', FS.makedev(1, 3));
         TTY.register(FS.makedev(5, 0), TTY.default_tty_ops);
         TTY.register(FS.makedev(6, 0), TTY.default_tty1_ops);
-        FS.mkdev("/dev/tty", FS.makedev(5, 0));
-        FS.mkdev("/dev/tty1", FS.makedev(6, 0));
+        FS.mkdev('/dev/tty', FS.makedev(5, 0));
+        FS.mkdev('/dev/tty1', FS.makedev(6, 0));
         var random_device = getRandomDevice();
-        FS.createDevice("/dev", "random", random_device);
-        FS.createDevice("/dev", "urandom", random_device);
-        FS.mkdir("/dev/shm");
-        FS.mkdir("/dev/shm/tmp");
+        FS.createDevice('/dev', 'random', random_device);
+        FS.createDevice('/dev', 'urandom', random_device);
+        FS.mkdir('/dev/shm');
+        FS.mkdir('/dev/shm/tmp');
       },
       createSpecialDirectories: () => {
-        FS.mkdir("/proc");
-        var proc_self = FS.mkdir("/proc/self");
-        FS.mkdir("/proc/self/fd");
+        FS.mkdir('/proc');
+        var proc_self = FS.mkdir('/proc/self');
+        FS.mkdir('/proc/self/fd');
         FS.mount(
           {
             mount: () => {
-              var node = FS.createNode(proc_self, "fd", 16384 | 511, 73);
+              var node = FS.createNode(proc_self, 'fd', 16384 | 511, 73);
               node.node_ops = {
                 lookup: (parent, name) => {
                   var fd = +name;
@@ -3348,7 +3348,7 @@ var OpenSCAD = (() => {
                   var ret = {
                     parent: null,
                     mount: {
-                      mountpoint: "fake",
+                      mountpoint: 'fake',
                     },
                     node_ops: {
                       readlink: () => stream.path,
@@ -3362,42 +3362,42 @@ var OpenSCAD = (() => {
             },
           },
           {},
-          "/proc/self/fd"
+          '/proc/self/fd'
         );
       },
       createStandardStreams: () => {
-        if (Module["stdin"]) {
-          FS.createDevice("/dev", "stdin", Module["stdin"]);
+        if (Module['stdin']) {
+          FS.createDevice('/dev', 'stdin', Module['stdin']);
         } else {
-          FS.symlink("/dev/tty", "/dev/stdin");
+          FS.symlink('/dev/tty', '/dev/stdin');
         }
-        if (Module["stdout"]) {
-          FS.createDevice("/dev", "stdout", null, Module["stdout"]);
+        if (Module['stdout']) {
+          FS.createDevice('/dev', 'stdout', null, Module['stdout']);
         } else {
-          FS.symlink("/dev/tty", "/dev/stdout");
+          FS.symlink('/dev/tty', '/dev/stdout');
         }
-        if (Module["stderr"]) {
-          FS.createDevice("/dev", "stderr", null, Module["stderr"]);
+        if (Module['stderr']) {
+          FS.createDevice('/dev', 'stderr', null, Module['stderr']);
         } else {
-          FS.symlink("/dev/tty1", "/dev/stderr");
+          FS.symlink('/dev/tty1', '/dev/stderr');
         }
-        var stdin = FS.open("/dev/stdin", 0);
-        var stdout = FS.open("/dev/stdout", 1);
-        var stderr = FS.open("/dev/stderr", 1);
-        assert(stdin.fd === 0, "invalid handle for stdin (" + stdin.fd + ")");
+        var stdin = FS.open('/dev/stdin', 0);
+        var stdout = FS.open('/dev/stdout', 1);
+        var stderr = FS.open('/dev/stderr', 1);
+        assert(stdin.fd === 0, 'invalid handle for stdin (' + stdin.fd + ')');
         assert(
           stdout.fd === 1,
-          "invalid handle for stdout (" + stdout.fd + ")"
+          'invalid handle for stdout (' + stdout.fd + ')'
         );
         assert(
           stderr.fd === 2,
-          "invalid handle for stderr (" + stderr.fd + ")"
+          'invalid handle for stderr (' + stderr.fd + ')'
         );
       },
       ensureErrnoError: () => {
         if (FS.ErrnoError) return;
         FS.ErrnoError = function ErrnoError(errno, node) {
-          this.name = "ErrnoError";
+          this.name = 'ErrnoError';
           this.node = node;
           this.setErrno = function (errno) {
             this.errno = errno;
@@ -3411,7 +3411,7 @@ var OpenSCAD = (() => {
           this.setErrno(errno);
           this.message = ERRNO_MESSAGES[errno];
           if (this.stack) {
-            Object.defineProperty(this, "stack", {
+            Object.defineProperty(this, 'stack', {
               value: new Error().stack,
               writable: true,
             });
@@ -3422,13 +3422,13 @@ var OpenSCAD = (() => {
         FS.ErrnoError.prototype.constructor = FS.ErrnoError;
         [44].forEach((code) => {
           FS.genericErrors[code] = new FS.ErrnoError(code);
-          FS.genericErrors[code].stack = "<generic error, no stack>";
+          FS.genericErrors[code].stack = '<generic error, no stack>';
         });
       },
       staticInit: () => {
         FS.ensureErrnoError();
         FS.nameTable = new Array(4096);
-        FS.mount(MEMFS, {}, "/");
+        FS.mount(MEMFS, {}, '/');
         FS.createDefaultDirectories();
         FS.createDefaultDevices();
         FS.createSpecialDirectories();
@@ -3439,13 +3439,13 @@ var OpenSCAD = (() => {
       init: (input, output, error) => {
         assert(
           !FS.init.initialized,
-          "FS.init was previously called. If you want to initialize later with custom parameters, remove any earlier calls (note that one is automatically added to the generated code)"
+          'FS.init was previously called. If you want to initialize later with custom parameters, remove any earlier calls (note that one is automatically added to the generated code)'
         );
         FS.init.initialized = true;
         FS.ensureErrnoError();
-        Module["stdin"] = input || Module["stdin"];
-        Module["stdout"] = output || Module["stdout"];
-        Module["stderr"] = error || Module["stderr"];
+        Module['stdin'] = input || Module['stdin'];
+        Module['stdout'] = output || Module['stdout'];
+        Module['stderr'] = error || Module['stderr'];
         FS.createStandardStreams();
       },
       quit: () => {
@@ -3505,15 +3505,15 @@ var OpenSCAD = (() => {
           ret.path = lookup.path;
           ret.object = lookup.node;
           ret.name = lookup.node.name;
-          ret.isRoot = lookup.path === "/";
+          ret.isRoot = lookup.path === '/';
         } catch (e) {
           ret.error = e.errno;
         }
         return ret;
       },
       createPath: (parent, path, canRead, canWrite) => {
-        parent = typeof parent == "string" ? parent : FS.getPath(parent);
-        var parts = path.split("/").reverse();
+        parent = typeof parent == 'string' ? parent : FS.getPath(parent);
+        var parts = path.split('/').reverse();
         while (parts.length) {
           var part = parts.pop();
           if (!part) continue;
@@ -3527,7 +3527,7 @@ var OpenSCAD = (() => {
       },
       createFile: (parent, name, properties, canRead, canWrite) => {
         var path = PATH.join2(
-          typeof parent == "string" ? parent : FS.getPath(parent),
+          typeof parent == 'string' ? parent : FS.getPath(parent),
           name
         );
         var mode = FS.getMode(canRead, canWrite);
@@ -3536,13 +3536,13 @@ var OpenSCAD = (() => {
       createDataFile: (parent, name, data, canRead, canWrite, canOwn) => {
         var path = name;
         if (parent) {
-          parent = typeof parent == "string" ? parent : FS.getPath(parent);
+          parent = typeof parent == 'string' ? parent : FS.getPath(parent);
           path = name ? PATH.join2(parent, name) : parent;
         }
         var mode = FS.getMode(canRead, canWrite);
         var node = FS.create(path, mode);
         if (data) {
-          if (typeof data == "string") {
+          if (typeof data == 'string') {
             var arr = new Array(data.length);
             for (var i = 0, len = data.length; i < len; ++i)
               arr[i] = data.charCodeAt(i);
@@ -3558,7 +3558,7 @@ var OpenSCAD = (() => {
       },
       createDevice: (parent, name, input, output) => {
         var path = PATH.join2(
-          typeof parent == "string" ? parent : FS.getPath(parent),
+          typeof parent == 'string' ? parent : FS.getPath(parent),
           name
         );
         var mode = FS.getMode(!!input, !!output);
@@ -3613,9 +3613,9 @@ var OpenSCAD = (() => {
       forceLoadFile: (obj) => {
         if (obj.isDevice || obj.isFolder || obj.link || obj.contents)
           return true;
-        if (typeof XMLHttpRequest != "undefined") {
+        if (typeof XMLHttpRequest != 'undefined') {
           throw new Error(
-            "Lazy loading should have been performed (contents set) in createLazyFile, but it was not. Lazy loading only works in web workers. Use --embed-file or --preload-file in emcc on the main thread."
+            'Lazy loading should have been performed (contents set) in createLazyFile, but it was not. Lazy loading only works in web workers. Use --embed-file or --preload-file in emcc on the main thread.'
           );
         } else if (read_) {
           try {
@@ -3625,7 +3625,7 @@ var OpenSCAD = (() => {
             throw new FS.ErrnoError(29);
           }
         } else {
-          throw new Error("Cannot load without read() or XMLHttpRequest.");
+          throw new Error('Cannot load without read() or XMLHttpRequest.');
         }
       },
       createLazyFile: (parent, name, url, canRead, canWrite) => {
@@ -3648,67 +3648,67 @@ var OpenSCAD = (() => {
         LazyUint8Array.prototype.cacheLength =
           function LazyUint8Array_cacheLength() {
             var xhr = new XMLHttpRequest();
-            xhr.open("HEAD", url, false);
+            xhr.open('HEAD', url, false);
             xhr.send(null);
             if (
               !((xhr.status >= 200 && xhr.status < 300) || xhr.status === 304)
             )
               throw new Error(
-                "Couldn't load " + url + ". Status: " + xhr.status
+                "Couldn't load " + url + '. Status: ' + xhr.status
               );
-            var datalength = Number(xhr.getResponseHeader("Content-length"));
+            var datalength = Number(xhr.getResponseHeader('Content-length'));
             var header;
             var hasByteServing =
-              (header = xhr.getResponseHeader("Accept-Ranges")) &&
-              header === "bytes";
+              (header = xhr.getResponseHeader('Accept-Ranges')) &&
+              header === 'bytes';
             var usesGzip =
-              (header = xhr.getResponseHeader("Content-Encoding")) &&
-              header === "gzip";
+              (header = xhr.getResponseHeader('Content-Encoding')) &&
+              header === 'gzip';
             var chunkSize = 1024 * 1024;
             if (!hasByteServing) chunkSize = datalength;
             var doXHR = (from, to) => {
               if (from > to)
                 throw new Error(
-                  "invalid range (" +
+                  'invalid range (' +
                     from +
-                    ", " +
+                    ', ' +
                     to +
-                    ") or no bytes requested!"
+                    ') or no bytes requested!'
                 );
               if (to > datalength - 1)
                 throw new Error(
-                  "only " + datalength + " bytes available! programmer error!"
+                  'only ' + datalength + ' bytes available! programmer error!'
                 );
               var xhr = new XMLHttpRequest();
-              xhr.open("GET", url, false);
+              xhr.open('GET', url, false);
               if (datalength !== chunkSize)
-                xhr.setRequestHeader("Range", "bytes=" + from + "-" + to);
-              xhr.responseType = "arraybuffer";
+                xhr.setRequestHeader('Range', 'bytes=' + from + '-' + to);
+              xhr.responseType = 'arraybuffer';
               if (xhr.overrideMimeType) {
-                xhr.overrideMimeType("text/plain; charset=x-user-defined");
+                xhr.overrideMimeType('text/plain; charset=x-user-defined');
               }
               xhr.send(null);
               if (
                 !((xhr.status >= 200 && xhr.status < 300) || xhr.status === 304)
               )
                 throw new Error(
-                  "Couldn't load " + url + ". Status: " + xhr.status
+                  "Couldn't load " + url + '. Status: ' + xhr.status
                 );
               if (xhr.response !== undefined) {
                 return new Uint8Array(xhr.response || []);
               }
-              return intArrayFromString(xhr.responseText || "", true);
+              return intArrayFromString(xhr.responseText || '', true);
             };
             var lazyArray = this;
             lazyArray.setDataGetter((chunkNum) => {
               var start = chunkNum * chunkSize;
               var end = (chunkNum + 1) * chunkSize - 1;
               end = Math.min(end, datalength - 1);
-              if (typeof lazyArray.chunks[chunkNum] == "undefined") {
+              if (typeof lazyArray.chunks[chunkNum] == 'undefined') {
                 lazyArray.chunks[chunkNum] = doXHR(start, end);
               }
-              if (typeof lazyArray.chunks[chunkNum] == "undefined")
-                throw new Error("doXHR failed!");
+              if (typeof lazyArray.chunks[chunkNum] == 'undefined')
+                throw new Error('doXHR failed!');
               return lazyArray.chunks[chunkNum];
             });
             if (usesGzip || !datalength) {
@@ -3716,16 +3716,16 @@ var OpenSCAD = (() => {
               datalength = this.getter(0).length;
               chunkSize = datalength;
               out(
-                "LazyFiles on gzip forces download of the whole file when length is accessed"
+                'LazyFiles on gzip forces download of the whole file when length is accessed'
               );
             }
             this._length = datalength;
             this._chunkSize = chunkSize;
             this.lengthKnown = true;
           };
-        if (typeof XMLHttpRequest != "undefined") {
+        if (typeof XMLHttpRequest != 'undefined') {
           if (!ENVIRONMENT_IS_WORKER)
-            throw "Cannot do synchronous binary XHRs outside webworkers in modern browsers. Use --embed-file or --preload-file in emcc";
+            throw 'Cannot do synchronous binary XHRs outside webworkers in modern browsers. Use --embed-file or --preload-file in emcc';
           var lazyArray = new LazyUint8Array();
           Object.defineProperties(lazyArray, {
             length: {
@@ -3828,7 +3828,7 @@ var OpenSCAD = (() => {
         var fullname = name
           ? PATH_FS.resolve(PATH.join2(parent, name))
           : parent;
-        var dep = getUniqueRunDependency("cp " + fullname);
+        var dep = getUniqueRunDependency('cp ' + fullname);
         function processData(byteArray) {
           function finish(byteArray) {
             if (preFinish) preFinish();
@@ -3856,7 +3856,7 @@ var OpenSCAD = (() => {
           finish(byteArray);
         }
         addRunDependency(dep);
-        if (typeof url == "string") {
+        if (typeof url == 'string') {
           asyncLoad(url, (byteArray) => processData(byteArray), onerror);
         } else {
           processData(url);
@@ -3871,10 +3871,10 @@ var OpenSCAD = (() => {
         );
       },
       DB_NAME: () => {
-        return "EM_FS_" + window.location.pathname;
+        return 'EM_FS_' + window.location.pathname;
       },
       DB_VERSION: 20,
-      DB_STORE_NAME: "FILE_DATA",
+      DB_STORE_NAME: 'FILE_DATA',
       saveFilesToDB: (paths, onload = () => {}, onerror = () => {}) => {
         var indexedDB = FS.indexedDB();
         try {
@@ -3883,13 +3883,13 @@ var OpenSCAD = (() => {
           return onerror(e);
         }
         openRequest.onupgradeneeded = () => {
-          out("creating db");
+          out('creating db');
           var db = openRequest.result;
           db.createObjectStore(FS.DB_STORE_NAME);
         };
         openRequest.onsuccess = () => {
           var db = openRequest.result;
-          var transaction = db.transaction([FS.DB_STORE_NAME], "readwrite");
+          var transaction = db.transaction([FS.DB_STORE_NAME], 'readwrite');
           var files = transaction.objectStore(FS.DB_STORE_NAME);
           var ok = 0,
             fail = 0,
@@ -3927,7 +3927,7 @@ var OpenSCAD = (() => {
         openRequest.onsuccess = () => {
           var db = openRequest.result;
           try {
-            var transaction = db.transaction([FS.DB_STORE_NAME], "readonly");
+            var transaction = db.transaction([FS.DB_STORE_NAME], 'readonly');
           } catch (e) {
             onerror(e);
             return;
@@ -3967,25 +3967,25 @@ var OpenSCAD = (() => {
         openRequest.onerror = onerror;
       },
       absolutePath: () => {
-        abort("FS.absolutePath has been removed; use PATH_FS.resolve instead");
+        abort('FS.absolutePath has been removed; use PATH_FS.resolve instead');
       },
       createFolder: () => {
-        abort("FS.createFolder has been removed; use FS.mkdir instead");
+        abort('FS.createFolder has been removed; use FS.mkdir instead');
       },
       createLink: () => {
-        abort("FS.createLink has been removed; use FS.symlink instead");
+        abort('FS.createLink has been removed; use FS.symlink instead');
       },
       joinPath: () => {
-        abort("FS.joinPath has been removed; use PATH.join instead");
+        abort('FS.joinPath has been removed; use PATH.join instead');
       },
       mmapAlloc: () => {
         abort(
-          "FS.mmapAlloc has been replaced by the top level function mmapAlloc"
+          'FS.mmapAlloc has been replaced by the top level function mmapAlloc'
         );
       },
       standardizePath: () => {
         abort(
-          "FS.standardizePath has been removed; use PATH.normalize instead"
+          'FS.standardizePath has been removed; use PATH.normalize instead'
         );
       },
     };
@@ -4151,7 +4151,7 @@ var OpenSCAD = (() => {
         FS.chdir(path);
         return 0;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -4162,30 +4162,30 @@ var OpenSCAD = (() => {
         FS.chmod(path, mode);
         return 0;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
 
     var SOCKFS = {
       mount: function (mount) {
-        Module["websocket"] =
-          Module["websocket"] && "object" === typeof Module["websocket"]
-            ? Module["websocket"]
+        Module['websocket'] =
+          Module['websocket'] && 'object' === typeof Module['websocket']
+            ? Module['websocket']
             : {};
-        Module["websocket"]._callbacks = {};
-        Module["websocket"]["on"] = function (event, callback) {
-          if ("function" === typeof callback) {
+        Module['websocket']._callbacks = {};
+        Module['websocket']['on'] = function (event, callback) {
+          if ('function' === typeof callback) {
             this._callbacks[event] = callback;
           }
           return this;
         };
-        Module["websocket"].emit = function (event, param) {
-          if ("function" === typeof this._callbacks[event]) {
+        Module['websocket'].emit = function (event, param) {
+          if ('function' === typeof this._callbacks[event]) {
             this._callbacks[event].call(this, param);
           }
         };
-        return FS.createNode(null, "/", 16384 | 511, 0);
+        return FS.createNode(null, '/', 16384 | 511, 0);
       },
       createSocket: function (family, type, protocol) {
         type &= ~526336;
@@ -4255,12 +4255,12 @@ var OpenSCAD = (() => {
         if (!SOCKFS.nextname.current) {
           SOCKFS.nextname.current = 0;
         }
-        return "socket[" + SOCKFS.nextname.current++ + "]";
+        return 'socket[' + SOCKFS.nextname.current++ + ']';
       },
       websocket_sock_ops: {
         createPeer: function (sock, addr, port) {
           var ws;
-          if (typeof addr == "object") {
+          if (typeof addr == 'object') {
             ws = addr;
             addr = null;
             port = null;
@@ -4273,7 +4273,7 @@ var OpenSCAD = (() => {
               var result = /ws[s]?:\/\/([^:]+):(\d+)/.exec(ws.url);
               if (!result) {
                 throw new Error(
-                  "WebSocket URL must be in the format ws(s)://address:port"
+                  'WebSocket URL must be in the format ws(s)://address:port'
                 );
               }
               addr = result[1];
@@ -4282,36 +4282,36 @@ var OpenSCAD = (() => {
           } else {
             try {
               var runtimeConfig =
-                Module["websocket"] && "object" === typeof Module["websocket"];
-              var url = "ws:#".replace("#", "//");
+                Module['websocket'] && 'object' === typeof Module['websocket'];
+              var url = 'ws:#'.replace('#', '//');
               if (runtimeConfig) {
-                if ("string" === typeof Module["websocket"]["url"]) {
-                  url = Module["websocket"]["url"];
+                if ('string' === typeof Module['websocket']['url']) {
+                  url = Module['websocket']['url'];
                 }
               }
-              if (url === "ws://" || url === "wss://") {
-                var parts = addr.split("/");
+              if (url === 'ws://' || url === 'wss://') {
+                var parts = addr.split('/');
                 url =
-                  url + parts[0] + ":" + port + "/" + parts.slice(1).join("/");
+                  url + parts[0] + ':' + port + '/' + parts.slice(1).join('/');
               }
-              var subProtocols = "binary";
+              var subProtocols = 'binary';
               if (runtimeConfig) {
-                if ("string" === typeof Module["websocket"]["subprotocol"]) {
-                  subProtocols = Module["websocket"]["subprotocol"];
+                if ('string' === typeof Module['websocket']['subprotocol']) {
+                  subProtocols = Module['websocket']['subprotocol'];
                 }
               }
               var opts = undefined;
-              if (subProtocols !== "null") {
+              if (subProtocols !== 'null') {
                 subProtocols = subProtocols
-                  .replace(/^ +| +$/g, "")
+                  .replace(/^ +| +$/g, '')
                   .split(/ *, */);
                 opts = subProtocols;
               }
               if (
                 runtimeConfig &&
-                null === Module["websocket"]["subprotocol"]
+                null === Module['websocket']['subprotocol']
               ) {
-                subProtocols = "null";
+                subProtocols = 'null';
                 opts = undefined;
               }
               var WebSocketConstructor;
@@ -4319,7 +4319,7 @@ var OpenSCAD = (() => {
                 WebSocketConstructor = WebSocket;
               }
               ws = new WebSocketConstructor(url, opts);
-              ws.binaryType = "arraybuffer";
+              ws.binaryType = 'arraybuffer';
             } catch (e) {
               throw new FS.ErrnoError(23);
             }
@@ -4332,17 +4332,17 @@ var OpenSCAD = (() => {
           };
           SOCKFS.websocket_sock_ops.addPeer(sock, peer);
           SOCKFS.websocket_sock_ops.handlePeerEvents(sock, peer);
-          if (sock.type === 2 && typeof sock.sport != "undefined") {
+          if (sock.type === 2 && typeof sock.sport != 'undefined') {
             peer.dgram_send_queue.push(
               new Uint8Array([
                 255,
                 255,
                 255,
                 255,
-                "p".charCodeAt(0),
-                "o".charCodeAt(0),
-                "r".charCodeAt(0),
-                "t".charCodeAt(0),
+                'p'.charCodeAt(0),
+                'o'.charCodeAt(0),
+                'r'.charCodeAt(0),
+                't'.charCodeAt(0),
                 (sock.sport & 65280) >> 8,
                 sock.sport & 255,
               ])
@@ -4351,18 +4351,18 @@ var OpenSCAD = (() => {
           return peer;
         },
         getPeer: function (sock, addr, port) {
-          return sock.peers[addr + ":" + port];
+          return sock.peers[addr + ':' + port];
         },
         addPeer: function (sock, peer) {
-          sock.peers[peer.addr + ":" + peer.port] = peer;
+          sock.peers[peer.addr + ':' + peer.port] = peer;
         },
         removePeer: function (sock, peer) {
-          delete sock.peers[peer.addr + ":" + peer.port];
+          delete sock.peers[peer.addr + ':' + peer.port];
         },
         handlePeerEvents: function (sock, peer) {
           var first = true;
           var handleOpen = function () {
-            Module["websocket"].emit("open", sock.stream.fd);
+            Module['websocket'].emit('open', sock.stream.fd);
             try {
               var queued = peer.dgram_send_queue.shift();
               while (queued) {
@@ -4374,7 +4374,7 @@ var OpenSCAD = (() => {
             }
           };
           function handleMessage(data) {
-            if (typeof data == "string") {
+            if (typeof data == 'string') {
               var encoder = new TextEncoder();
               data = encoder.encode(data);
             } else {
@@ -4393,10 +4393,10 @@ var OpenSCAD = (() => {
               data[1] === 255 &&
               data[2] === 255 &&
               data[3] === 255 &&
-              data[4] === "p".charCodeAt(0) &&
-              data[5] === "o".charCodeAt(0) &&
-              data[6] === "r".charCodeAt(0) &&
-              data[7] === "t".charCodeAt(0)
+              data[4] === 'p'.charCodeAt(0) &&
+              data[5] === 'o'.charCodeAt(0) &&
+              data[6] === 'r'.charCodeAt(0) &&
+              data[7] === 't'.charCodeAt(0)
             ) {
               var newport = (data[8] << 8) | data[9];
               SOCKFS.websocket_sock_ops.removePeer(sock, peer);
@@ -4409,41 +4409,41 @@ var OpenSCAD = (() => {
               port: peer.port,
               data: data,
             });
-            Module["websocket"].emit("message", sock.stream.fd);
+            Module['websocket'].emit('message', sock.stream.fd);
           }
           if (ENVIRONMENT_IS_NODE) {
-            peer.socket.on("open", handleOpen);
-            peer.socket.on("message", function (data, isBinary) {
+            peer.socket.on('open', handleOpen);
+            peer.socket.on('message', function (data, isBinary) {
               if (!isBinary) {
                 return;
               }
               handleMessage(new Uint8Array(data).buffer);
             });
-            peer.socket.on("close", function () {
-              Module["websocket"].emit("close", sock.stream.fd);
+            peer.socket.on('close', function () {
+              Module['websocket'].emit('close', sock.stream.fd);
             });
-            peer.socket.on("error", function (error) {
+            peer.socket.on('error', function (error) {
               sock.error = 14;
-              Module["websocket"].emit("error", [
+              Module['websocket'].emit('error', [
                 sock.stream.fd,
                 sock.error,
-                "ECONNREFUSED: Connection refused",
+                'ECONNREFUSED: Connection refused',
               ]);
             });
           } else {
             peer.socket.onopen = handleOpen;
             peer.socket.onclose = function () {
-              Module["websocket"].emit("close", sock.stream.fd);
+              Module['websocket'].emit('close', sock.stream.fd);
             };
             peer.socket.onmessage = function peer_socket_onmessage(event) {
               handleMessage(event.data);
             };
             peer.socket.onerror = function (error) {
               sock.error = 14;
-              Module["websocket"].emit("error", [
+              Module['websocket'].emit('error', [
                 sock.stream.fd,
                 sock.error,
-                "ECONNREFUSED: Connection refused",
+                'ECONNREFUSED: Connection refused',
               ]);
             };
           }
@@ -4509,8 +4509,8 @@ var OpenSCAD = (() => {
         },
         bind: function (sock, addr, port) {
           if (
-            typeof sock.saddr != "undefined" ||
-            typeof sock.sport != "undefined"
+            typeof sock.saddr != 'undefined' ||
+            typeof sock.sport != 'undefined'
           ) {
             throw new FS.ErrnoError(28);
           }
@@ -4524,7 +4524,7 @@ var OpenSCAD = (() => {
             try {
               sock.sock_ops.listen(sock, 0);
             } catch (e) {
-              if (!(e.name === "ErrnoError")) throw e;
+              if (!(e.name === 'ErrnoError')) throw e;
               if (e.errno !== 138) throw e;
             }
           }
@@ -4534,8 +4534,8 @@ var OpenSCAD = (() => {
             throw new FS.ErrnoError(138);
           }
           if (
-            typeof sock.daddr != "undefined" &&
-            typeof sock.dport != "undefined"
+            typeof sock.daddr != 'undefined' &&
+            typeof sock.dport != 'undefined'
           ) {
             var dest = SOCKFS.websocket_sock_ops.getPeer(
               sock,
@@ -4715,17 +4715,17 @@ var OpenSCAD = (() => {
     function inetNtop4(addr) {
       return (
         (addr & 255) +
-        "." +
+        '.' +
         ((addr >> 8) & 255) +
-        "." +
+        '.' +
         ((addr >> 16) & 255) +
-        "." +
+        '.' +
         ((addr >> 24) & 255)
       );
     }
 
     function inetNtop6(ints) {
-      var str = "";
+      var str = '';
       var word = 0;
       var longest = 0;
       var lastzero = 0;
@@ -4743,7 +4743,7 @@ var OpenSCAD = (() => {
         ints[3] >> 16,
       ];
       var hasipv4 = true;
-      var v4part = "";
+      var v4part = '';
       for (i = 0; i < 5; i++) {
         if (parts[i] !== 0) {
           hasipv4 = false;
@@ -4753,14 +4753,14 @@ var OpenSCAD = (() => {
       if (hasipv4) {
         v4part = inetNtop4(parts[6] | (parts[7] << 16));
         if (parts[5] === -1) {
-          str = "::ffff:";
+          str = '::ffff:';
           str += v4part;
           return str;
         }
         if (parts[5] === 0) {
-          str = "::";
-          if (v4part === "0.0.0.0") v4part = "";
-          if (v4part === "0.0.0.1") v4part = "1";
+          str = '::';
+          if (v4part === '0.0.0.0') v4part = '';
+          if (v4part === '0.0.0.1') v4part = '1';
           str += v4part;
           return str;
         }
@@ -4782,14 +4782,14 @@ var OpenSCAD = (() => {
         if (longest > 1) {
           if (parts[word] === 0 && word >= zstart && word < zstart + longest) {
             if (word === zstart) {
-              str += ":";
-              if (zstart === 0) str += ":";
+              str += ':';
+              if (zstart === 0) str += ':';
             }
             continue;
           }
         }
         str += Number(_ntohs(parts[word] & 65535)).toString(16);
-        str += word < 7 ? ":" : "";
+        str += word < 7 ? ':' : '';
       }
       return str;
     }
@@ -4837,7 +4837,7 @@ var OpenSCAD = (() => {
     }
 
     function inetPton4(str) {
-      var b = str.split(".");
+      var b = str.split('.');
       for (var i = 0; i < 4; i++) {
         var tmp = Number(b[i]);
         if (isNaN(tmp)) return null;
@@ -4859,17 +4859,17 @@ var OpenSCAD = (() => {
       if (!valid6regx.test(str)) {
         return null;
       }
-      if (str === "::") {
+      if (str === '::') {
         return [0, 0, 0, 0, 0, 0, 0, 0];
       }
-      if (str.startsWith("::")) {
-        str = str.replace("::", "Z:");
+      if (str.startsWith('::')) {
+        str = str.replace('::', 'Z:');
       } else {
-        str = str.replace("::", ":Z:");
+        str = str.replace('::', ':Z:');
       }
-      if (str.indexOf(".") > 0) {
-        str = str.replace(new RegExp("[.]", "g"), ":");
-        words = str.split(":");
+      if (str.indexOf('.') > 0) {
+        str = str.replace(new RegExp('[.]', 'g'), ':');
+        words = str.split(':');
         words[words.length - 4] =
           jstoi_q(words[words.length - 4]) +
           jstoi_q(words[words.length - 3]) * 256;
@@ -4878,13 +4878,13 @@ var OpenSCAD = (() => {
           jstoi_q(words[words.length - 1]) * 256;
         words = words.slice(0, words.length - 2);
       } else {
-        words = str.split(":");
+        words = str.split(':');
       }
       offset = 0;
       z = 0;
       for (w = 0; w < words.length; w++) {
-        if (typeof words[w] == "string") {
-          if (words[w] === "Z") {
+        if (typeof words[w] == 'string') {
+          if (words[w] === 'Z') {
             for (z = 0; z < 8 - words.length + 1; z++) {
               parts[w + z] = 0;
             }
@@ -4924,8 +4924,8 @@ var OpenSCAD = (() => {
           addr = DNS.address_map.addrs[name];
         } else {
           var id = DNS.address_map.id++;
-          assert(id < 65535, "exceeded max address mappings of 65535");
-          addr = "172.29." + (id & 255) + "." + (id & 65280);
+          assert(id < 65535, 'exceeded max address mappings of 65535');
+          addr = '172.29.' + (id & 255) + '.' + (id & 65280);
           DNS.address_map.names[addr] = name;
           DNS.address_map.addrs[name] = addr;
         }
@@ -4954,7 +4954,7 @@ var OpenSCAD = (() => {
         sock.sock_ops.connect(sock, info.addr, info.port);
         return 0;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -4974,16 +4974,16 @@ var OpenSCAD = (() => {
         if (!node) {
           return -44;
         }
-        var perms = "";
-        if (amode & 4) perms += "r";
-        if (amode & 2) perms += "w";
-        if (amode & 1) perms += "x";
+        var perms = '';
+        if (amode & 4) perms += 'r';
+        if (amode & 2) perms += 'w';
+        if (amode & 1) perms += 'x';
         if (perms && FS.nodePermissions(node, perms)) {
           return -2;
         }
         return 0;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5040,7 +5040,7 @@ var OpenSCAD = (() => {
           }
         }
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5050,7 +5050,7 @@ var OpenSCAD = (() => {
         var stream = SYSCALLS.getStreamFromFD(fd);
         return SYSCALLS.doStat(FS.stat, stream.path, buf);
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5071,7 +5071,7 @@ var OpenSCAD = (() => {
         HEAP32[(buf + 36) >>> 2] = 255;
         return 0;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5081,7 +5081,7 @@ var OpenSCAD = (() => {
         var stream = SYSCALLS.getStreamFromFD(fd);
         return ___syscall_statfs64(0, size, buf);
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5101,7 +5101,7 @@ var OpenSCAD = (() => {
         FS.ftruncate(fd, length);
         return 0;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5115,7 +5115,7 @@ var OpenSCAD = (() => {
         stringToUTF8(cwd, buf, size);
         return cwdLengthInBytes;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5134,10 +5134,10 @@ var OpenSCAD = (() => {
           var id;
           var type;
           var name = stream.getdents[idx];
-          if (name === ".") {
+          if (name === '.') {
             id = stream.node.id;
             type = 4;
-          } else if (name === "..") {
+          } else if (name === '..') {
             var lookup = FS.lookupPath(stream.path, {
               parent: true,
             });
@@ -5194,7 +5194,7 @@ var OpenSCAD = (() => {
         FS.llseek(stream, idx * struct_size, 0);
         return pos;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5212,7 +5212,7 @@ var OpenSCAD = (() => {
         }
         return -50;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5269,7 +5269,7 @@ var OpenSCAD = (() => {
             return -28;
         }
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5279,7 +5279,7 @@ var OpenSCAD = (() => {
         path = SYSCALLS.getStr(path);
         return SYSCALLS.doStat(FS.lstat, path, buf);
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5289,12 +5289,12 @@ var OpenSCAD = (() => {
         path = SYSCALLS.getStr(path);
         path = SYSCALLS.calculateAt(dirfd, path);
         path = PATH.normalize(path);
-        if (path[path.length - 1] === "/")
+        if (path[path.length - 1] === '/')
           path = path.substr(0, path.length - 1);
         FS.mkdir(path, mode, 0);
         return 0;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5305,11 +5305,11 @@ var OpenSCAD = (() => {
         var nofollow = flags & 256;
         var allowEmpty = flags & 4096;
         flags = flags & ~6400;
-        assert(!flags, "unknown flags in __syscall_newfstatat: " + flags);
+        assert(!flags, 'unknown flags in __syscall_newfstatat: ' + flags);
         path = SYSCALLS.calculateAt(dirfd, path, allowEmpty);
         return SYSCALLS.doStat(nofollow ? FS.lstat : FS.stat, path, buf);
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5322,7 +5322,7 @@ var OpenSCAD = (() => {
         var mode = varargs ? SYSCALLS.get() : 0;
         return FS.open(path, flags, mode).fd;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5348,7 +5348,7 @@ var OpenSCAD = (() => {
         }
         return nonzero;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5365,7 +5365,7 @@ var OpenSCAD = (() => {
         HEAP8[(buf + len) >>> 0] = endChar;
         return len;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5421,7 +5421,7 @@ var OpenSCAD = (() => {
         HEAPU8.set(msg.buffer, buf >>> 0);
         return msg.buffer.byteLength;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5435,7 +5435,7 @@ var OpenSCAD = (() => {
         FS.rename(oldpath, newpath);
         return 0;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5446,7 +5446,7 @@ var OpenSCAD = (() => {
         FS.rmdir(path);
         return 0;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5467,7 +5467,7 @@ var OpenSCAD = (() => {
           dest.port
         );
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5478,7 +5478,7 @@ var OpenSCAD = (() => {
         assert(sock.stream.fd < 64);
         return sock.stream.fd;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5488,7 +5488,7 @@ var OpenSCAD = (() => {
         path = SYSCALLS.getStr(path);
         return SYSCALLS.doStat(FS.stat, path, buf);
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5500,7 +5500,7 @@ var OpenSCAD = (() => {
         FS.symlink(target, linkpath);
         return 0;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5514,11 +5514,11 @@ var OpenSCAD = (() => {
         } else if (flags === 512) {
           FS.rmdir(path);
         } else {
-          abort("Invalid flags passed to unlinkat");
+          abort('Invalid flags passed to unlinkat');
         }
         return 0;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5640,7 +5640,7 @@ var OpenSCAD = (() => {
         HEAPU32[addr >>> 2] = ptr;
         return 0;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5653,7 +5653,7 @@ var OpenSCAD = (() => {
         }
         FS.munmap(stream);
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return -e.errno;
       }
     }
@@ -5661,16 +5661,16 @@ var OpenSCAD = (() => {
     var timers = {};
 
     function handleException(e) {
-      if (e instanceof ExitStatus || e == "unwind") {
+      if (e instanceof ExitStatus || e == 'unwind') {
         return EXITSTATUS;
       }
       checkStackCookie();
       if (e instanceof WebAssembly.RuntimeError) {
         if (_emscripten_stack_get_current() <= 0) {
           err(
-            "Stack overflow detected.  You can try increasing -sSTACK_SIZE (currently set to " +
+            'Stack overflow detected.  You can try increasing -sSTACK_SIZE (currently set to ' +
               65536 +
-              ")"
+              ')'
           );
         }
       }
@@ -5680,7 +5680,7 @@ var OpenSCAD = (() => {
     function _proc_exit(code) {
       EXITSTATUS = code;
       if (!keepRuntimeAlive()) {
-        if (Module["onExit"]) Module["onExit"](code);
+        if (Module['onExit']) Module['onExit'](code);
         ABORT = true;
       }
       quit_(code, new ExitStatus(code));
@@ -5693,11 +5693,11 @@ var OpenSCAD = (() => {
       }
       if (keepRuntimeAlive() && !implicit) {
         var msg =
-          "program exited (with status: " +
+          'program exited (with status: ' +
           status +
-          "), but keepRuntimeAlive() is set (counter=" +
+          '), but keepRuntimeAlive() is set (counter=' +
           runtimeKeepaliveCounter +
-          ") due to an async operation, so halting execution but not exiting the runtime or preventing further async execution (you can use emscripten_force_exit, if you want to force a true shutdown)";
+          ') due to an async operation, so halting execution but not exiting the runtime or preventing further async execution (you can use emscripten_force_exit, if you want to force a true shutdown)';
         readyPromiseReject(msg);
         err(msg);
       }
@@ -5722,7 +5722,7 @@ var OpenSCAD = (() => {
     function callUserCallback(func) {
       if (runtimeExited || ABORT) {
         err(
-          "user callback triggered after runtime exited or application aborted.  Ignoring."
+          'user callback triggered after runtime exited or application aborted.  Ignoring.'
         );
         return;
       }
@@ -5776,7 +5776,7 @@ var OpenSCAD = (() => {
       HEAP32[daylight >>> 2] = Number(winterOffset != summerOffset);
       function extractZone(date) {
         var match = date.toTimeString().match(/\(([A-Za-z ]+)\)$/);
-        return match ? match[1] : "GMT";
+        return match ? match[1] : 'GMT';
       }
       var winterName = extractZone(winter);
       var summerName = extractZone(summer);
@@ -5792,11 +5792,11 @@ var OpenSCAD = (() => {
     }
 
     function _abort() {
-      abort("native code called abort()");
+      abort('native code called abort()');
     }
 
     function _emscripten_console_error(str) {
-      assert(typeof str == "number");
+      assert(typeof str == 'number');
       console.error(UTF8ToString(str));
     }
 
@@ -5824,11 +5824,11 @@ var OpenSCAD = (() => {
         return 1;
       } catch (e) {
         err(
-          "emscripten_realloc_buffer: Attempted to grow heap from " +
+          'emscripten_realloc_buffer: Attempted to grow heap from ' +
             b.byteLength +
-            " bytes to " +
+            ' bytes to ' +
             size +
-            " bytes, but got error: " +
+            ' bytes, but got error: ' +
             e
         );
       }
@@ -5841,11 +5841,11 @@ var OpenSCAD = (() => {
       var maxHeapSize = getHeapMax();
       if (requestedSize > maxHeapSize) {
         err(
-          "Cannot enlarge memory, asked to go up to " +
+          'Cannot enlarge memory, asked to go up to ' +
             requestedSize +
-            " bytes, but the limit is " +
+            ' bytes, but the limit is ' +
             maxHeapSize +
-            " bytes!"
+            ' bytes!'
         );
         return false;
       }
@@ -5867,11 +5867,11 @@ var OpenSCAD = (() => {
         }
       }
       err(
-        "Failed to grow the heap from " +
+        'Failed to grow the heap from ' +
           oldSize +
-          " bytes to " +
+          ' bytes to ' +
           newSize +
-          " bytes, not enough memory!"
+          ' bytes, not enough memory!'
       );
       return false;
     }
@@ -5879,24 +5879,24 @@ var OpenSCAD = (() => {
     var ENV = {};
 
     function getExecutableName() {
-      return thisProgram || "./this.program";
+      return thisProgram || './this.program';
     }
 
     function getEnvStrings() {
       if (!getEnvStrings.strings) {
         var lang =
           (
-            (typeof navigator == "object" &&
+            (typeof navigator == 'object' &&
               navigator.languages &&
               navigator.languages[0]) ||
-            "C"
-          ).replace("-", "_") + ".UTF-8";
+            'C'
+          ).replace('-', '_') + '.UTF-8';
         var env = {
-          USER: "web_user",
-          LOGNAME: "web_user",
-          PATH: "/",
-          PWD: "/",
-          HOME: "/home/web_user",
+          USER: 'web_user',
+          LOGNAME: 'web_user',
+          PATH: '/',
+          PWD: '/',
+          HOME: '/home/web_user',
           LANG: lang,
           _: getExecutableName(),
         };
@@ -5906,7 +5906,7 @@ var OpenSCAD = (() => {
         }
         var strings = [];
         for (var x in env) {
-          strings.push(x + "=" + env[x]);
+          strings.push(x + '=' + env[x]);
         }
         getEnvStrings.strings = strings;
       }
@@ -5949,7 +5949,7 @@ var OpenSCAD = (() => {
         FS.close(stream);
         return 0;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return e.errno;
       }
     }
@@ -5967,7 +5967,7 @@ var OpenSCAD = (() => {
         HEAP8[pbuf >>> 0] = type;
         return 0;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return e.errno;
       }
     }
@@ -5982,7 +5982,7 @@ var OpenSCAD = (() => {
         if (curr < 0) return -1;
         ret += curr;
         if (curr < len) break;
-        if (typeof offset !== "undefined") {
+        if (typeof offset !== 'undefined') {
           offset += curr;
         }
       }
@@ -5996,7 +5996,7 @@ var OpenSCAD = (() => {
         HEAPU32[pnum >>> 2] = num;
         return 0;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return e.errno;
       }
     }
@@ -6026,7 +6026,7 @@ var OpenSCAD = (() => {
           stream.getdents = null;
         return 0;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return e.errno;
       }
     }
@@ -6040,7 +6040,7 @@ var OpenSCAD = (() => {
         var curr = FS.write(stream, HEAP8, ptr, len, offset);
         if (curr < 0) return -1;
         ret += curr;
-        if (typeof offset !== "undefined") {
+        if (typeof offset !== 'undefined') {
           offset += curr;
         }
       }
@@ -6054,7 +6054,7 @@ var OpenSCAD = (() => {
         HEAPU32[pnum >>> 2] = num;
         return 0;
       } catch (e) {
-        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
         return e.errno;
       }
     }
@@ -6124,7 +6124,7 @@ var OpenSCAD = (() => {
     function writeArrayToMemory(array, buffer) {
       assert(
         array.length >= 0,
-        "writeArrayToMemory array must have a length (should be an array or typed array)"
+        'writeArrayToMemory array must have a length (should be an array or typed array)'
       );
       HEAP8.set(array, buffer >>> 0);
     }
@@ -6142,77 +6142,77 @@ var OpenSCAD = (() => {
         tm_yday: HEAP32[(tm + 28) >>> 2],
         tm_isdst: HEAP32[(tm + 32) >>> 2],
         tm_gmtoff: HEAP32[(tm + 36) >>> 2],
-        tm_zone: tm_zone ? UTF8ToString(tm_zone) : "",
+        tm_zone: tm_zone ? UTF8ToString(tm_zone) : '',
       };
       var pattern = UTF8ToString(format);
       var EXPANSION_RULES_1 = {
-        "%c": "%a %b %d %H:%M:%S %Y",
-        "%D": "%m/%d/%y",
-        "%F": "%Y-%m-%d",
-        "%h": "%b",
-        "%r": "%I:%M:%S %p",
-        "%R": "%H:%M",
-        "%T": "%H:%M:%S",
-        "%x": "%m/%d/%y",
-        "%X": "%H:%M:%S",
-        "%Ec": "%c",
-        "%EC": "%C",
-        "%Ex": "%m/%d/%y",
-        "%EX": "%H:%M:%S",
-        "%Ey": "%y",
-        "%EY": "%Y",
-        "%Od": "%d",
-        "%Oe": "%e",
-        "%OH": "%H",
-        "%OI": "%I",
-        "%Om": "%m",
-        "%OM": "%M",
-        "%OS": "%S",
-        "%Ou": "%u",
-        "%OU": "%U",
-        "%OV": "%V",
-        "%Ow": "%w",
-        "%OW": "%W",
-        "%Oy": "%y",
+        '%c': '%a %b %d %H:%M:%S %Y',
+        '%D': '%m/%d/%y',
+        '%F': '%Y-%m-%d',
+        '%h': '%b',
+        '%r': '%I:%M:%S %p',
+        '%R': '%H:%M',
+        '%T': '%H:%M:%S',
+        '%x': '%m/%d/%y',
+        '%X': '%H:%M:%S',
+        '%Ec': '%c',
+        '%EC': '%C',
+        '%Ex': '%m/%d/%y',
+        '%EX': '%H:%M:%S',
+        '%Ey': '%y',
+        '%EY': '%Y',
+        '%Od': '%d',
+        '%Oe': '%e',
+        '%OH': '%H',
+        '%OI': '%I',
+        '%Om': '%m',
+        '%OM': '%M',
+        '%OS': '%S',
+        '%Ou': '%u',
+        '%OU': '%U',
+        '%OV': '%V',
+        '%Ow': '%w',
+        '%OW': '%W',
+        '%Oy': '%y',
       };
       for (var rule in EXPANSION_RULES_1) {
         pattern = pattern.replace(
-          new RegExp(rule, "g"),
+          new RegExp(rule, 'g'),
           EXPANSION_RULES_1[rule]
         );
       }
       var WEEKDAYS = [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
+        'Sunday',
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
       ];
       var MONTHS = [
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December",
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December',
       ];
       function leadingSomething(value, digits, character) {
-        var str = typeof value == "number" ? value.toString() : value || "";
+        var str = typeof value == 'number' ? value.toString() : value || '';
         while (str.length < digits) {
           str = character[0] + str;
         }
         return str;
       }
       function leadingNulls(value, digits) {
-        return leadingSomething(value, digits, "0");
+        return leadingSomething(value, digits, '0');
       }
       function compareByDay(date1, date2) {
         function sgn(value) {
@@ -6268,44 +6268,44 @@ var OpenSCAD = (() => {
         return thisDate.getFullYear() - 1;
       }
       var EXPANSION_RULES_2 = {
-        "%a": function (date) {
+        '%a': function (date) {
           return WEEKDAYS[date.tm_wday].substring(0, 3);
         },
-        "%A": function (date) {
+        '%A': function (date) {
           return WEEKDAYS[date.tm_wday];
         },
-        "%b": function (date) {
+        '%b': function (date) {
           return MONTHS[date.tm_mon].substring(0, 3);
         },
-        "%B": function (date) {
+        '%B': function (date) {
           return MONTHS[date.tm_mon];
         },
-        "%C": function (date) {
+        '%C': function (date) {
           var year = date.tm_year + 1900;
           return leadingNulls((year / 100) | 0, 2);
         },
-        "%d": function (date) {
+        '%d': function (date) {
           return leadingNulls(date.tm_mday, 2);
         },
-        "%e": function (date) {
-          return leadingSomething(date.tm_mday, 2, " ");
+        '%e': function (date) {
+          return leadingSomething(date.tm_mday, 2, ' ');
         },
-        "%g": function (date) {
+        '%g': function (date) {
           return getWeekBasedYear(date).toString().substring(2);
         },
-        "%G": function (date) {
+        '%G': function (date) {
           return getWeekBasedYear(date);
         },
-        "%H": function (date) {
+        '%H': function (date) {
           return leadingNulls(date.tm_hour, 2);
         },
-        "%I": function (date) {
+        '%I': function (date) {
           var twelveHour = date.tm_hour;
           if (twelveHour == 0) twelveHour = 12;
           else if (twelveHour > 12) twelveHour -= 12;
           return leadingNulls(twelveHour, 2);
         },
-        "%j": function (date) {
+        '%j': function (date) {
           return leadingNulls(
             date.tm_mday +
               __arraySum(
@@ -6317,35 +6317,35 @@ var OpenSCAD = (() => {
             3
           );
         },
-        "%m": function (date) {
+        '%m': function (date) {
           return leadingNulls(date.tm_mon + 1, 2);
         },
-        "%M": function (date) {
+        '%M': function (date) {
           return leadingNulls(date.tm_min, 2);
         },
-        "%n": function () {
-          return "\n";
+        '%n': function () {
+          return '\n';
         },
-        "%p": function (date) {
+        '%p': function (date) {
           if (date.tm_hour >= 0 && date.tm_hour < 12) {
-            return "AM";
+            return 'AM';
           }
-          return "PM";
+          return 'PM';
         },
-        "%S": function (date) {
+        '%S': function (date) {
           return leadingNulls(date.tm_sec, 2);
         },
-        "%t": function () {
-          return "\t";
+        '%t': function () {
+          return '\t';
         },
-        "%u": function (date) {
+        '%u': function (date) {
           return date.tm_wday || 7;
         },
-        "%U": function (date) {
+        '%U': function (date) {
           var days = date.tm_yday + 7 - date.tm_wday;
           return leadingNulls(Math.floor(days / 7), 2);
         },
-        "%V": function (date) {
+        '%V': function (date) {
           var val = Math.floor(
             (date.tm_yday + 7 - ((date.tm_wday + 6) % 7)) / 7
           );
@@ -6368,43 +6368,43 @@ var OpenSCAD = (() => {
           }
           return leadingNulls(val, 2);
         },
-        "%w": function (date) {
+        '%w': function (date) {
           return date.tm_wday;
         },
-        "%W": function (date) {
+        '%W': function (date) {
           var days = date.tm_yday + 7 - ((date.tm_wday + 6) % 7);
           return leadingNulls(Math.floor(days / 7), 2);
         },
-        "%y": function (date) {
+        '%y': function (date) {
           return (date.tm_year + 1900).toString().substring(2);
         },
-        "%Y": function (date) {
+        '%Y': function (date) {
           return date.tm_year + 1900;
         },
-        "%z": function (date) {
+        '%z': function (date) {
           var off = date.tm_gmtoff;
           var ahead = off >= 0;
           off = Math.abs(off) / 60;
           off = (off / 60) * 100 + (off % 60);
-          return (ahead ? "+" : "-") + String("0000" + off).slice(-4);
+          return (ahead ? '+' : '-') + String('0000' + off).slice(-4);
         },
-        "%Z": function (date) {
+        '%Z': function (date) {
           return date.tm_zone;
         },
-        "%%": function () {
-          return "%";
+        '%%': function () {
+          return '%';
         },
       };
-      pattern = pattern.replace(/%%/g, "\0\0");
+      pattern = pattern.replace(/%%/g, '\0\0');
       for (var rule in EXPANSION_RULES_2) {
         if (pattern.includes(rule)) {
           pattern = pattern.replace(
-            new RegExp(rule, "g"),
+            new RegExp(rule, 'g'),
             EXPANSION_RULES_2[rule](date)
           );
         }
       }
-      pattern = pattern.replace(/\0\0/g, "%");
+      pattern = pattern.replace(/\0\0/g, '%');
       var bytes = intArrayFromString(pattern, false);
       if (bytes.length > maxsize) {
         return 0;
@@ -6607,7 +6607,7 @@ var OpenSCAD = (() => {
     };
 
     function checkIncomingModuleAPI() {
-      ignoredModuleProp("fetchSettings");
+      ignoredModuleProp('fetchSettings');
     }
 
     var wasmImports = {
@@ -6786,128 +6786,128 @@ var OpenSCAD = (() => {
 
     var asm = createWasm();
 
-    var ___wasm_call_ctors = createExportWrapper("__wasm_call_ctors");
+    var ___wasm_call_ctors = createExportWrapper('__wasm_call_ctors');
 
-    var getTempRet0 = createExportWrapper("getTempRet0");
+    var getTempRet0 = createExportWrapper('getTempRet0');
 
-    var ___cxa_free_exception = createExportWrapper("__cxa_free_exception");
+    var ___cxa_free_exception = createExportWrapper('__cxa_free_exception');
 
-    var _main = (Module["_main"] = createExportWrapper("__main_argc_argv"));
+    var _main = (Module['_main'] = createExportWrapper('__main_argc_argv'));
 
-    var ___errno_location = createExportWrapper("__errno_location");
+    var ___errno_location = createExportWrapper('__errno_location');
 
-    var _malloc = createExportWrapper("malloc");
+    var _malloc = createExportWrapper('malloc');
 
-    var _free = (Module["_free"] = createExportWrapper("free"));
+    var _free = (Module['_free'] = createExportWrapper('free'));
 
-    var setTempRet0 = createExportWrapper("setTempRet0");
+    var setTempRet0 = createExportWrapper('setTempRet0');
 
-    var _saveSetjmp = createExportWrapper("saveSetjmp");
+    var _saveSetjmp = createExportWrapper('saveSetjmp');
 
-    var _fflush = (Module["_fflush"] = createExportWrapper("fflush"));
+    var _fflush = (Module['_fflush'] = createExportWrapper('fflush'));
 
-    var _htons = createExportWrapper("htons");
+    var _htons = createExportWrapper('htons');
 
-    var ___funcs_on_exit = createExportWrapper("__funcs_on_exit");
+    var ___funcs_on_exit = createExportWrapper('__funcs_on_exit');
 
-    var ___dl_seterr = createExportWrapper("__dl_seterr");
+    var ___dl_seterr = createExportWrapper('__dl_seterr');
 
     var _emscripten_builtin_memalign = createExportWrapper(
-      "emscripten_builtin_memalign"
+      'emscripten_builtin_memalign'
     );
 
-    var _ntohs = createExportWrapper("ntohs");
+    var _ntohs = createExportWrapper('ntohs');
 
-    var __emscripten_timeout = createExportWrapper("_emscripten_timeout");
+    var __emscripten_timeout = createExportWrapper('_emscripten_timeout');
 
-    var _setThrew = createExportWrapper("setThrew");
+    var _setThrew = createExportWrapper('setThrew');
 
     var _emscripten_stack_init = function () {
       return (_emscripten_stack_init =
-        Module["asm"]["emscripten_stack_init"]).apply(null, arguments);
+        Module['asm']['emscripten_stack_init']).apply(null, arguments);
     };
 
     var _emscripten_stack_get_free = function () {
       return (_emscripten_stack_get_free =
-        Module["asm"]["emscripten_stack_get_free"]).apply(null, arguments);
+        Module['asm']['emscripten_stack_get_free']).apply(null, arguments);
     };
 
     var _emscripten_stack_get_base = function () {
       return (_emscripten_stack_get_base =
-        Module["asm"]["emscripten_stack_get_base"]).apply(null, arguments);
+        Module['asm']['emscripten_stack_get_base']).apply(null, arguments);
     };
 
     var _emscripten_stack_get_end = function () {
       return (_emscripten_stack_get_end =
-        Module["asm"]["emscripten_stack_get_end"]).apply(null, arguments);
+        Module['asm']['emscripten_stack_get_end']).apply(null, arguments);
     };
 
-    var stackSave = createExportWrapper("stackSave");
+    var stackSave = createExportWrapper('stackSave');
 
-    var stackRestore = createExportWrapper("stackRestore");
+    var stackRestore = createExportWrapper('stackRestore');
 
-    var stackAlloc = createExportWrapper("stackAlloc");
+    var stackAlloc = createExportWrapper('stackAlloc');
 
     var _emscripten_stack_get_current = function () {
       return (_emscripten_stack_get_current =
-        Module["asm"]["emscripten_stack_get_current"]).apply(null, arguments);
+        Module['asm']['emscripten_stack_get_current']).apply(null, arguments);
     };
 
-    var ___get_exception_message = (Module["___get_exception_message"] =
-      createExportWrapper("__get_exception_message"));
+    var ___get_exception_message = (Module['___get_exception_message'] =
+      createExportWrapper('__get_exception_message'));
 
-    var ___cxa_can_catch = createExportWrapper("__cxa_can_catch");
+    var ___cxa_can_catch = createExportWrapper('__cxa_can_catch');
 
-    var ___cxa_is_pointer_type = createExportWrapper("__cxa_is_pointer_type");
+    var ___cxa_is_pointer_type = createExportWrapper('__cxa_is_pointer_type');
 
-    var dynCall_viijii = (Module["dynCall_viijii"] =
-      createExportWrapper("dynCall_viijii"));
+    var dynCall_viijii = (Module['dynCall_viijii'] =
+      createExportWrapper('dynCall_viijii'));
 
-    var dynCall_jii = (Module["dynCall_jii"] =
-      createExportWrapper("dynCall_jii"));
+    var dynCall_jii = (Module['dynCall_jii'] =
+      createExportWrapper('dynCall_jii'));
 
-    var dynCall_jiiii = (Module["dynCall_jiiii"] =
-      createExportWrapper("dynCall_jiiii"));
+    var dynCall_jiiii = (Module['dynCall_jiiii'] =
+      createExportWrapper('dynCall_jiiii'));
 
-    var dynCall_ji = (Module["dynCall_ji"] = createExportWrapper("dynCall_ji"));
+    var dynCall_ji = (Module['dynCall_ji'] = createExportWrapper('dynCall_ji'));
 
-    var dynCall_vij = (Module["dynCall_vij"] =
-      createExportWrapper("dynCall_vij"));
+    var dynCall_vij = (Module['dynCall_vij'] =
+      createExportWrapper('dynCall_vij'));
 
-    var dynCall_iij = (Module["dynCall_iij"] =
-      createExportWrapper("dynCall_iij"));
+    var dynCall_iij = (Module['dynCall_iij'] =
+      createExportWrapper('dynCall_iij'));
 
-    var dynCall_jiii = (Module["dynCall_jiii"] =
-      createExportWrapper("dynCall_jiii"));
+    var dynCall_jiii = (Module['dynCall_jiii'] =
+      createExportWrapper('dynCall_jiii'));
 
-    var dynCall_iiji = (Module["dynCall_iiji"] =
-      createExportWrapper("dynCall_iiji"));
+    var dynCall_iiji = (Module['dynCall_iiji'] =
+      createExportWrapper('dynCall_iiji'));
 
-    var dynCall_viji = (Module["dynCall_viji"] =
-      createExportWrapper("dynCall_viji"));
+    var dynCall_viji = (Module['dynCall_viji'] =
+      createExportWrapper('dynCall_viji'));
 
-    var dynCall_vijii = (Module["dynCall_vijii"] =
-      createExportWrapper("dynCall_vijii"));
+    var dynCall_vijii = (Module['dynCall_vijii'] =
+      createExportWrapper('dynCall_vijii'));
 
-    var dynCall_iiiji = (Module["dynCall_iiiji"] =
-      createExportWrapper("dynCall_iiiji"));
+    var dynCall_iiiji = (Module['dynCall_iiiji'] =
+      createExportWrapper('dynCall_iiiji'));
 
-    var dynCall_iijii = (Module["dynCall_iijii"] =
-      createExportWrapper("dynCall_iijii"));
+    var dynCall_iijii = (Module['dynCall_iijii'] =
+      createExportWrapper('dynCall_iijii'));
 
-    var dynCall_jiji = (Module["dynCall_jiji"] =
-      createExportWrapper("dynCall_jiji"));
+    var dynCall_jiji = (Module['dynCall_jiji'] =
+      createExportWrapper('dynCall_jiji'));
 
-    var dynCall_j = (Module["dynCall_j"] = createExportWrapper("dynCall_j"));
+    var dynCall_j = (Module['dynCall_j'] = createExportWrapper('dynCall_j'));
 
-    var dynCall_iiiiij = (Module["dynCall_iiiiij"] =
-      createExportWrapper("dynCall_iiiiij"));
+    var dynCall_iiiiij = (Module['dynCall_iiiiij'] =
+      createExportWrapper('dynCall_iiiiij'));
 
-    var dynCall_iiiiijj = (Module["dynCall_iiiiijj"] =
-      createExportWrapper("dynCall_iiiiijj"));
+    var dynCall_iiiiijj = (Module['dynCall_iiiiijj'] =
+      createExportWrapper('dynCall_iiiiijj'));
 
-    var dynCall_iiiiiijj = (Module["dynCall_iiiiiijj"] =
-      createExportWrapper("dynCall_iiiiiijj"));
+    var dynCall_iiiiiijj = (Module['dynCall_iiiiiijj'] =
+      createExportWrapper('dynCall_iiiiiijj'));
 
     function invoke_vi(index, a1) {
       var sp = stackSave();
@@ -8484,268 +8484,268 @@ var OpenSCAD = (() => {
       }
     }
 
-    Module["callMain"] = callMain;
+    Module['callMain'] = callMain;
 
-    Module["ENV"] = ENV;
+    Module['ENV'] = ENV;
 
-    Module["ERRNO_CODES"] = ERRNO_CODES;
+    Module['ERRNO_CODES'] = ERRNO_CODES;
 
-    Module["PATH"] = PATH;
+    Module['PATH'] = PATH;
 
-    Module["FS"] = FS;
+    Module['FS'] = FS;
 
     var missingLibrarySymbols = [
-      "stringToNewUTF8",
-      "traverseStack",
-      "convertPCtoSourceLocation",
-      "readEmAsmArgs",
-      "jstoi_s",
-      "listenOnce",
-      "autoResumeAudioContext",
-      "dynCallLegacy",
-      "getDynCaller",
-      "dynCall",
-      "runtimeKeepalivePush",
-      "runtimeKeepalivePop",
-      "safeSetTimeout",
-      "asmjsMangle",
-      "HandleAllocator",
-      "getNativeTypeSize",
-      "STACK_SIZE",
-      "STACK_ALIGN",
-      "POINTER_SIZE",
-      "ASSERTIONS",
-      "writeI53ToI64",
-      "writeI53ToI64Clamped",
-      "writeI53ToI64Signaling",
-      "writeI53ToU64Clamped",
-      "writeI53ToU64Signaling",
-      "readI53FromU64",
-      "convertI32PairToI53",
-      "convertU32PairToI53",
-      "getCFunc",
-      "ccall",
-      "cwrap",
-      "uleb128Encode",
-      "sigToWasmTypes",
-      "generateFuncType",
-      "convertJsFunctionToWasm",
-      "getEmptyTableSlot",
-      "updateTableMap",
-      "getFunctionAddress",
-      "addFunction",
-      "removeFunction",
-      "reallyNegative",
-      "unSign",
-      "strLen",
-      "reSign",
-      "formatString",
-      "intArrayToString",
-      "AsciiToString",
-      "stringToAscii",
-      "UTF16ToString",
-      "stringToUTF16",
-      "lengthBytesUTF16",
-      "UTF32ToString",
-      "stringToUTF32",
-      "lengthBytesUTF32",
-      "writeStringToMemory",
-      "registerKeyEventCallback",
-      "maybeCStringToJsString",
-      "findEventTarget",
-      "findCanvasEventTarget",
-      "getBoundingClientRect",
-      "fillMouseEventData",
-      "registerMouseEventCallback",
-      "registerWheelEventCallback",
-      "registerUiEventCallback",
-      "registerFocusEventCallback",
-      "fillDeviceOrientationEventData",
-      "registerDeviceOrientationEventCallback",
-      "fillDeviceMotionEventData",
-      "registerDeviceMotionEventCallback",
-      "screenOrientation",
-      "fillOrientationChangeEventData",
-      "registerOrientationChangeEventCallback",
-      "fillFullscreenChangeEventData",
-      "registerFullscreenChangeEventCallback",
-      "JSEvents_requestFullscreen",
-      "JSEvents_resizeCanvasForFullscreen",
-      "registerRestoreOldStyle",
-      "hideEverythingExceptGivenElement",
-      "restoreHiddenElements",
-      "setLetterbox",
-      "softFullscreenResizeWebGLRenderTarget",
-      "doRequestFullscreen",
-      "fillPointerlockChangeEventData",
-      "registerPointerlockChangeEventCallback",
-      "registerPointerlockErrorEventCallback",
-      "requestPointerLock",
-      "fillVisibilityChangeEventData",
-      "registerVisibilityChangeEventCallback",
-      "registerTouchEventCallback",
-      "fillGamepadEventData",
-      "registerGamepadEventCallback",
-      "registerBeforeUnloadEventCallback",
-      "fillBatteryEventData",
-      "battery",
-      "registerBatteryEventCallback",
-      "setCanvasElementSize",
-      "getCanvasElementSize",
-      "jsStackTrace",
-      "stackTrace",
-      "checkWasiClock",
-      "createDyncallWrapper",
-      "setImmediateWrapped",
-      "clearImmediateWrapped",
-      "polyfillSetImmediate",
-      "getPromise",
-      "makePromise",
-      "makePromiseCallback",
-      "setMainLoop",
-      "_setNetworkCallback",
-      "heapObjectForWebGLType",
-      "heapAccessShiftForWebGLHeap",
-      "emscriptenWebGLGet",
-      "computeUnpackAlignedImageSize",
-      "emscriptenWebGLGetTexPixelData",
-      "emscriptenWebGLGetUniform",
-      "webglGetUniformLocation",
-      "webglPrepareUniformLocationsBeforeFirstUse",
-      "webglGetLeftBracePos",
-      "emscriptenWebGLGetVertexAttrib",
-      "writeGLArray",
-      "SDL_unicode",
-      "SDL_ttfContext",
-      "SDL_audio",
-      "GLFW_Window",
-      "runAndAbortIfError",
-      "ALLOC_NORMAL",
-      "ALLOC_STACK",
-      "allocate",
+      'stringToNewUTF8',
+      'traverseStack',
+      'convertPCtoSourceLocation',
+      'readEmAsmArgs',
+      'jstoi_s',
+      'listenOnce',
+      'autoResumeAudioContext',
+      'dynCallLegacy',
+      'getDynCaller',
+      'dynCall',
+      'runtimeKeepalivePush',
+      'runtimeKeepalivePop',
+      'safeSetTimeout',
+      'asmjsMangle',
+      'HandleAllocator',
+      'getNativeTypeSize',
+      'STACK_SIZE',
+      'STACK_ALIGN',
+      'POINTER_SIZE',
+      'ASSERTIONS',
+      'writeI53ToI64',
+      'writeI53ToI64Clamped',
+      'writeI53ToI64Signaling',
+      'writeI53ToU64Clamped',
+      'writeI53ToU64Signaling',
+      'readI53FromU64',
+      'convertI32PairToI53',
+      'convertU32PairToI53',
+      'getCFunc',
+      'ccall',
+      'cwrap',
+      'uleb128Encode',
+      'sigToWasmTypes',
+      'generateFuncType',
+      'convertJsFunctionToWasm',
+      'getEmptyTableSlot',
+      'updateTableMap',
+      'getFunctionAddress',
+      'addFunction',
+      'removeFunction',
+      'reallyNegative',
+      'unSign',
+      'strLen',
+      'reSign',
+      'formatString',
+      'intArrayToString',
+      'AsciiToString',
+      'stringToAscii',
+      'UTF16ToString',
+      'stringToUTF16',
+      'lengthBytesUTF16',
+      'UTF32ToString',
+      'stringToUTF32',
+      'lengthBytesUTF32',
+      'writeStringToMemory',
+      'registerKeyEventCallback',
+      'maybeCStringToJsString',
+      'findEventTarget',
+      'findCanvasEventTarget',
+      'getBoundingClientRect',
+      'fillMouseEventData',
+      'registerMouseEventCallback',
+      'registerWheelEventCallback',
+      'registerUiEventCallback',
+      'registerFocusEventCallback',
+      'fillDeviceOrientationEventData',
+      'registerDeviceOrientationEventCallback',
+      'fillDeviceMotionEventData',
+      'registerDeviceMotionEventCallback',
+      'screenOrientation',
+      'fillOrientationChangeEventData',
+      'registerOrientationChangeEventCallback',
+      'fillFullscreenChangeEventData',
+      'registerFullscreenChangeEventCallback',
+      'JSEvents_requestFullscreen',
+      'JSEvents_resizeCanvasForFullscreen',
+      'registerRestoreOldStyle',
+      'hideEverythingExceptGivenElement',
+      'restoreHiddenElements',
+      'setLetterbox',
+      'softFullscreenResizeWebGLRenderTarget',
+      'doRequestFullscreen',
+      'fillPointerlockChangeEventData',
+      'registerPointerlockChangeEventCallback',
+      'registerPointerlockErrorEventCallback',
+      'requestPointerLock',
+      'fillVisibilityChangeEventData',
+      'registerVisibilityChangeEventCallback',
+      'registerTouchEventCallback',
+      'fillGamepadEventData',
+      'registerGamepadEventCallback',
+      'registerBeforeUnloadEventCallback',
+      'fillBatteryEventData',
+      'battery',
+      'registerBatteryEventCallback',
+      'setCanvasElementSize',
+      'getCanvasElementSize',
+      'jsStackTrace',
+      'stackTrace',
+      'checkWasiClock',
+      'createDyncallWrapper',
+      'setImmediateWrapped',
+      'clearImmediateWrapped',
+      'polyfillSetImmediate',
+      'getPromise',
+      'makePromise',
+      'makePromiseCallback',
+      'setMainLoop',
+      '_setNetworkCallback',
+      'heapObjectForWebGLType',
+      'heapAccessShiftForWebGLHeap',
+      'emscriptenWebGLGet',
+      'computeUnpackAlignedImageSize',
+      'emscriptenWebGLGetTexPixelData',
+      'emscriptenWebGLGetUniform',
+      'webglGetUniformLocation',
+      'webglPrepareUniformLocationsBeforeFirstUse',
+      'webglGetLeftBracePos',
+      'emscriptenWebGLGetVertexAttrib',
+      'writeGLArray',
+      'SDL_unicode',
+      'SDL_ttfContext',
+      'SDL_audio',
+      'GLFW_Window',
+      'runAndAbortIfError',
+      'ALLOC_NORMAL',
+      'ALLOC_STACK',
+      'allocate',
     ];
 
     missingLibrarySymbols.forEach(missingLibrarySymbol);
 
     var unexportedSymbols = [
-      "run",
-      "UTF8ArrayToString",
-      "UTF8ToString",
-      "stringToUTF8Array",
-      "stringToUTF8",
-      "lengthBytesUTF8",
-      "addOnPreRun",
-      "addOnInit",
-      "addOnPreMain",
-      "addOnExit",
-      "addOnPostRun",
-      "addRunDependency",
-      "removeRunDependency",
-      "FS_createFolder",
-      "FS_createPath",
-      "FS_createDataFile",
-      "FS_createPreloadedFile",
-      "FS_createLazyFile",
-      "FS_createLink",
-      "FS_createDevice",
-      "FS_unlink",
-      "out",
-      "err",
-      "abort",
-      "keepRuntimeAlive",
-      "wasmMemory",
-      "stackAlloc",
-      "stackSave",
-      "stackRestore",
-      "getTempRet0",
-      "setTempRet0",
-      "writeStackCookie",
-      "checkStackCookie",
-      "ptrToString",
-      "zeroMemory",
-      "exitJS",
-      "getHeapMax",
-      "emscripten_realloc_buffer",
-      "ERRNO_MESSAGES",
-      "setErrNo",
-      "inetPton4",
-      "inetNtop4",
-      "inetPton6",
-      "inetNtop6",
-      "readSockaddr",
-      "writeSockaddr",
-      "DNS",
-      "getHostByName",
-      "Protocols",
-      "Sockets",
-      "getRandomDevice",
-      "timers",
-      "warnOnce",
-      "UNWIND_CACHE",
-      "readEmAsmArgsArray",
-      "jstoi_q",
-      "getExecutableName",
-      "handleException",
-      "callUserCallback",
-      "maybeExit",
-      "asyncLoad",
-      "alignMemory",
-      "mmapAlloc",
-      "readI53FromI64",
-      "convertI32PairToI53Checked",
-      "freeTableIndexes",
-      "functionsInTableMap",
-      "setValue",
-      "getValue",
-      "PATH_FS",
-      "intArrayFromString",
-      "UTF16Decoder",
-      "allocateUTF8",
-      "allocateUTF8OnStack",
-      "writeArrayToMemory",
-      "writeAsciiToMemory",
-      "SYSCALLS",
-      "getSocketFromFD",
-      "getSocketAddress",
-      "JSEvents",
-      "specialHTMLTargets",
-      "currentFullscreenStrategy",
-      "restoreOldWindowedStyle",
-      "demangle",
-      "demangleAll",
-      "ExitStatus",
-      "getEnvStrings",
-      "doReadv",
-      "doWritev",
-      "dlopenMissingError",
-      "promiseMap",
-      "uncaughtExceptionCount",
-      "exceptionLast",
-      "exceptionCaught",
-      "ExceptionInfo",
-      "exception_addRef",
-      "exception_decRef",
-      "getExceptionMessageCommon",
-      "incrementExceptionRefcount",
-      "decrementExceptionRefcount",
-      "getExceptionMessage",
-      "Browser",
-      "wget",
-      "MEMFS",
-      "TTY",
-      "PIPEFS",
-      "SOCKFS",
-      "tempFixedLengthArray",
-      "miniTempWebGLFloatBuffers",
-      "GL",
-      "AL",
-      "SDL",
-      "SDL_gfx",
-      "GLUT",
-      "EGL",
-      "GLFW",
-      "GLEW",
-      "IDBStore",
+      'run',
+      'UTF8ArrayToString',
+      'UTF8ToString',
+      'stringToUTF8Array',
+      'stringToUTF8',
+      'lengthBytesUTF8',
+      'addOnPreRun',
+      'addOnInit',
+      'addOnPreMain',
+      'addOnExit',
+      'addOnPostRun',
+      'addRunDependency',
+      'removeRunDependency',
+      'FS_createFolder',
+      'FS_createPath',
+      'FS_createDataFile',
+      'FS_createPreloadedFile',
+      'FS_createLazyFile',
+      'FS_createLink',
+      'FS_createDevice',
+      'FS_unlink',
+      'out',
+      'err',
+      'abort',
+      'keepRuntimeAlive',
+      'wasmMemory',
+      'stackAlloc',
+      'stackSave',
+      'stackRestore',
+      'getTempRet0',
+      'setTempRet0',
+      'writeStackCookie',
+      'checkStackCookie',
+      'ptrToString',
+      'zeroMemory',
+      'exitJS',
+      'getHeapMax',
+      'emscripten_realloc_buffer',
+      'ERRNO_MESSAGES',
+      'setErrNo',
+      'inetPton4',
+      'inetNtop4',
+      'inetPton6',
+      'inetNtop6',
+      'readSockaddr',
+      'writeSockaddr',
+      'DNS',
+      'getHostByName',
+      'Protocols',
+      'Sockets',
+      'getRandomDevice',
+      'timers',
+      'warnOnce',
+      'UNWIND_CACHE',
+      'readEmAsmArgsArray',
+      'jstoi_q',
+      'getExecutableName',
+      'handleException',
+      'callUserCallback',
+      'maybeExit',
+      'asyncLoad',
+      'alignMemory',
+      'mmapAlloc',
+      'readI53FromI64',
+      'convertI32PairToI53Checked',
+      'freeTableIndexes',
+      'functionsInTableMap',
+      'setValue',
+      'getValue',
+      'PATH_FS',
+      'intArrayFromString',
+      'UTF16Decoder',
+      'allocateUTF8',
+      'allocateUTF8OnStack',
+      'writeArrayToMemory',
+      'writeAsciiToMemory',
+      'SYSCALLS',
+      'getSocketFromFD',
+      'getSocketAddress',
+      'JSEvents',
+      'specialHTMLTargets',
+      'currentFullscreenStrategy',
+      'restoreOldWindowedStyle',
+      'demangle',
+      'demangleAll',
+      'ExitStatus',
+      'getEnvStrings',
+      'doReadv',
+      'doWritev',
+      'dlopenMissingError',
+      'promiseMap',
+      'uncaughtExceptionCount',
+      'exceptionLast',
+      'exceptionCaught',
+      'ExceptionInfo',
+      'exception_addRef',
+      'exception_decRef',
+      'getExceptionMessageCommon',
+      'incrementExceptionRefcount',
+      'decrementExceptionRefcount',
+      'getExceptionMessage',
+      'Browser',
+      'wget',
+      'MEMFS',
+      'TTY',
+      'PIPEFS',
+      'SOCKFS',
+      'tempFixedLengthArray',
+      'miniTempWebGLFloatBuffers',
+      'GL',
+      'AL',
+      'SDL',
+      'SDL_gfx',
+      'GLUT',
+      'EGL',
+      'GLFW',
+      'GLEW',
+      'IDBStore',
     ];
 
     unexportedSymbols.forEach(unexportedRuntimeSymbol);
@@ -8764,7 +8764,7 @@ var OpenSCAD = (() => {
       );
       assert(
         __ATPRERUN__.length == 0,
-        "cannot call main when preRun functions remain to be called"
+        'cannot call main when preRun functions remain to be called'
       );
       var entryFunction = _main;
       args.unshift(thisProgram);
@@ -8804,20 +8804,20 @@ var OpenSCAD = (() => {
       function doRun() {
         if (calledRun) return;
         calledRun = true;
-        Module["calledRun"] = true;
+        Module['calledRun'] = true;
         if (ABORT) return;
         initRuntime();
         preMain();
         readyPromiseResolve(Module);
-        if (Module["onRuntimeInitialized"]) Module["onRuntimeInitialized"]();
+        if (Module['onRuntimeInitialized']) Module['onRuntimeInitialized']();
         if (shouldRunNow) callMain(args);
         postRun();
       }
-      if (Module["setStatus"]) {
-        Module["setStatus"]("Running...");
+      if (Module['setStatus']) {
+        Module['setStatus']('Running...');
         setTimeout(function () {
           setTimeout(function () {
-            Module["setStatus"]("");
+            Module['setStatus']('');
           }, 1);
           doRun();
         }, 1);
@@ -8827,17 +8827,17 @@ var OpenSCAD = (() => {
       checkStackCookie();
     }
 
-    if (Module["preInit"]) {
-      if (typeof Module["preInit"] == "function")
-        Module["preInit"] = [Module["preInit"]];
-      while (Module["preInit"].length > 0) {
-        Module["preInit"].pop()();
+    if (Module['preInit']) {
+      if (typeof Module['preInit'] == 'function')
+        Module['preInit'] = [Module['preInit']];
+      while (Module['preInit'].length > 0) {
+        Module['preInit'].pop()();
       }
     }
 
     var shouldRunNow = true;
 
-    if (Module["noInitialRun"]) shouldRunNow = false;
+    if (Module['noInitialRun']) shouldRunNow = false;
 
     run();
 

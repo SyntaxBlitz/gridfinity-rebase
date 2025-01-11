@@ -1,4 +1,4 @@
-import hull from "hull.js";
+import hull from 'hull.js';
 import {
   BufferGeometry,
   Matrix4,
@@ -7,9 +7,9 @@ import {
   Shape,
   Vector2,
   Vector3,
-} from "three";
+} from 'three';
 // @ts-expect-error
-import UnionFind from "union-find";
+import UnionFind from 'union-find';
 
 export const getShapeHullsForGeometry = (
   meshGeometry: BufferGeometry
@@ -148,7 +148,7 @@ const isHullBad = (island: Shape) => {
   );
 };
 
-export type RotationType = "original" | "x+" | "x-" | "y+" | "y-" | "180";
+export type RotationType = 'original' | 'x+' | 'x-' | 'y+' | 'y-' | '180';
 
 export const getBestShapeHullsForGeometry = (
   meshGeometry: BufferGeometry
@@ -163,32 +163,32 @@ export const getBestShapeHullsForGeometry = (
 } => {
   const rotations = [
     {
-      type: "original",
+      type: 'original',
       geometry: meshGeometry,
       rotationMatrix: new Matrix4(),
     },
     {
-      type: "x+",
+      type: 'x+',
       geometry: meshGeometry,
       rotationMatrix: new Matrix4().makeRotationX(Math.PI / 2),
     },
     {
-      type: "x-",
+      type: 'x-',
       geometry: meshGeometry,
       rotationMatrix: new Matrix4().makeRotationX(-Math.PI / 2),
     },
     {
-      type: "y+",
+      type: 'y+',
       geometry: meshGeometry,
       rotationMatrix: new Matrix4().makeRotationY(Math.PI / 2),
     },
     {
-      type: "y-",
+      type: 'y-',
       geometry: meshGeometry,
       rotationMatrix: new Matrix4().makeRotationY(-Math.PI / 2),
     },
     {
-      type: "180",
+      type: '180',
       geometry: meshGeometry,
       rotationMatrix: new Matrix4().makeRotationY(Math.PI),
     },
@@ -229,7 +229,7 @@ export const getBestShapeHullsForGeometry = (
   console.log({ best });
 
   if (!best) {
-    throw new Error("No best found");
+    throw new Error('No best found');
   }
 
   return best;

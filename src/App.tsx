@@ -1,24 +1,24 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import "./App.css";
+import { useCallback, useEffect, useRef, useState } from 'react';
+import './App.css';
 
-import { Alert, Box, Button, LinearProgress, Stack } from "@mui/material";
+import { Alert, Box, Button, LinearProgress, Stack } from '@mui/material';
 
-import * as idb from "idb";
-import * as THREE from "three";
+import * as idb from 'idb';
+import * as THREE from 'three';
 
-import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
-import { Font, FontLoader } from "three/addons/loaders/FontLoader.js";
+import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+import { Font, FontLoader } from 'three/addons/loaders/FontLoader.js';
 
 // import { ConvexHull } from "three/examples/jsm/math/ConvexHull.js";
-import { useOrbitCanvas, useRenderInputFile } from "./canvas.ts";
-import { useLoadInputFileBlob } from "./file-utils.ts";
+import { useOrbitCanvas, useRenderInputFile } from './canvas.ts';
+import { useLoadInputFileBlob } from './file-utils.ts';
 import {
   getBestShapeHullsForGeometry,
   getZMinForGeometry,
   RotationType,
-} from "./hull-utils.ts";
-import { loadSTLGeometry } from "./mesh-utils.ts";
-import { generateScadForShapes, runOpenSCAD } from "./scad-utils.ts";
+} from './hull-utils.ts';
+import { loadSTLGeometry } from './mesh-utils.ts';
+import { generateScadForShapes, runOpenSCAD } from './scad-utils.ts';
 
 // todo nice to make this dynamic
 const CANVAS_WIDTH = 420;
@@ -31,10 +31,10 @@ const loadFileAsBlob = async (filename: string): Promise<Blob> => {
 };
 
 const openDb = async () => {
-  return await idb.openDB("gridfinity-rebase", 1, {
+  return await idb.openDB('gridfinity-rebase', 1, {
     upgrade(db) {
-      if (!db.objectStoreNames.contains("files")) {
-        db.createObjectStore("files");
+      if (!db.objectStoreNames.contains('files')) {
+        db.createObjectStore('files');
       }
     },
   });
@@ -92,15 +92,15 @@ function App() {
 
       const goldBuffer = await goldInputFile.arrayBuffer();
       const goldBlob = new Blob([goldBuffer], {
-        type: "application/octet-stream",
+        type: 'application/octet-stream',
       });
 
       // store in indexeddb
       const db = await openDb();
 
-      const tx = db.transaction("files", "readwrite");
+      const tx = db.transaction('files', 'readwrite');
 
-      tx.store.put(goldBlob, "gold.stl");
+      tx.store.put(goldBlob, 'gold.stl');
 
       await tx.done;
 
@@ -119,7 +119,7 @@ function App() {
       // just to test aborting. though ig should go below the db.get
       // await new Promise((resolve) => setTimeout(resolve, 10000));
 
-      const blob = await db.get("files", "gold.stl");
+      const blob = await db.get('files', 'gold.stl');
 
       if (!blob) {
         return;
@@ -129,7 +129,7 @@ function App() {
         return;
       }
 
-      setGoldInputFile(new File([blob], "gold.stl"));
+      setGoldInputFile(new File([blob], 'gold.stl'));
 
       loadedGold = true;
     })();
@@ -151,7 +151,7 @@ function App() {
       const { shapes, rotation } = getBestShapeHullsForGeometry(meshGeometry);
 
       const openSans = await new Promise<Font>((resolve) => {
-        new FontLoader().load("open-sans.json", resolve);
+        new FontLoader().load('open-sans.json', resolve);
       });
 
       shapes.forEach((shape, i) => {
@@ -248,10 +248,10 @@ function App() {
         goldBuffer
       );
 
-      const link = document.createElement("a");
+      const link = document.createElement('a');
       link.href = blobUrl;
 
-      const fixedName = toFixName.replace(/\.stl$/, "-rebase.stl");
+      const fixedName = toFixName.replace(/\.stl$/, '-rebase.stl');
       link.download = fixedName;
 
       document.body.append(link);
@@ -274,16 +274,16 @@ function App() {
 
   return (
     <Stack width={960} margin="auto" spacing={2} alignItems="center" py={6}>
-      <Stack direction="row" alignItems={"center"} spacing={2}>
+      <Stack direction="row" alignItems={'center'} spacing={2}>
         <Box
           position="relative"
           sx={{
-            border: "1px solid #ddd",
+            border: '1px solid #ddd',
           }}
         >
           <Stack
             sx={{
-              position: "absolute",
+              position: 'absolute',
               top: 0,
               left: 0,
             }}
@@ -298,7 +298,7 @@ function App() {
             <h2>File to print</h2>
 
             <Button
-              sx={{ backgroundColor: "white" }}
+              sx={{ backgroundColor: 'white' }}
               variant="outlined"
               onClick={() => toFixInputRef.current?.click()}
             >
@@ -320,12 +320,12 @@ function App() {
           <Box
             position="relative"
             sx={{
-              border: "1px solid #ddd",
+              border: '1px solid #ddd',
             }}
           >
             <Stack
               sx={{
-                position: "absolute",
+                position: 'absolute',
                 top: 0,
                 left: 0,
               }}
@@ -339,7 +339,7 @@ function App() {
             >
               <h2>Replacement base</h2>
               <Button
-                sx={{ backgroundColor: "white" }}
+                sx={{ backgroundColor: 'white' }}
                 variant="outlined"
                 onClick={() => goldInputRef.current?.click()}
               >
@@ -365,7 +365,7 @@ function App() {
       <Stack spacing={2} width={640}>
         {detections === null ? null : (
           <>
-            {detections.rotation !== "original" ? (
+            {detections.rotation !== 'original' ? (
               <Alert severity="info">
                 Decided to rotate the model first (
                 <strong>{detections.rotation}</strong>) so that bases are flat
@@ -374,7 +374,7 @@ function App() {
             ) : null}
             <Alert severity="info">
               Detected {detections.shapeCount} base
-              {detections.shapeCount === 1 ? "" : "s"} to rebase.
+              {detections.shapeCount === 1 ? '' : 's'} to rebase.
             </Alert>
           </>
         )}
@@ -387,7 +387,7 @@ function App() {
       ) : null}
       {scadError ? (
         <Box>
-          OpenSCAD failed to run :/<pre>{scadError.join("\n")}</pre>
+          OpenSCAD failed to run :/<pre>{scadError.join('\n')}</pre>
         </Box>
       ) : null}
     </Stack>

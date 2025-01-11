@@ -1,5 +1,5 @@
-import { Shape } from "three";
-import { getShapeBoundingBoxCentroid, RotationType } from "./hull-utils.ts";
+import { Shape } from 'three';
+import { getShapeBoundingBoxCentroid, RotationType } from './hull-utils.ts';
 
 // todo: get the positioning for the gold stl as well
 export const generateScadForShapes = (
@@ -35,7 +35,7 @@ ${centers
     (center, i) =>
       `        translate([${center[0]}, ${center[1]}, ${zMin}]) simple_cut();`
   )
-  .join("\n")}
+  .join('\n')}
     }
     
 ${centers
@@ -43,7 +43,7 @@ ${centers
     (center, i) =>
       `    translate([${center[0]}, ${center[1]}, ${zMin}]) preferred_bottom();`
   )
-  .join("\n")}
+  .join('\n')}
 }
 `;
 };
@@ -52,18 +52,18 @@ ${centers
 // have magnet hole preferences and _not_ want to have a consistent rotation
 const rotateSCADCodeForRotation = (type: RotationType): string => {
   switch (type) {
-    case "x+":
-      return "rotate([90, 0, 0])";
-    case "x-":
-      return "rotate([-90, 0, 0])";
-    case "y+":
-      return "rotate([0, 90, 0])";
-    case "y-":
-      return "rotate([0, -90, 0])";
-    case "180":
-      return "rotate([0, 0, 180])";
+    case 'x+':
+      return 'rotate([90, 0, 0])';
+    case 'x-':
+      return 'rotate([-90, 0, 0])';
+    case 'y+':
+      return 'rotate([0, 90, 0])';
+    case 'y-':
+      return 'rotate([0, -90, 0])';
+    case '180':
+      return 'rotate([0, 0, 180])';
     default:
-      return "";
+      return '';
   }
 };
 
@@ -74,9 +74,9 @@ export const runOpenSCAD = (
 ) => {
   return new Promise<string>((resolve, reject) => {
     const worker = new Worker(
-      new URL("workers/scad-worker.js", import.meta.url),
+      new URL('workers/scad-worker.js', import.meta.url),
       {
-        type: "module",
+        type: 'module',
       }
     );
     worker.postMessage({
@@ -86,7 +86,7 @@ export const runOpenSCAD = (
     });
 
     worker.onmessage = (e) => {
-      if (e.data.type === "error") {
+      if (e.data.type === 'error') {
         reject(e.data.messages);
         return;
       }

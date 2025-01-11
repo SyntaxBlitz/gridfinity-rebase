@@ -1,8 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from 'react';
 
-import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { loadSTLGeometry } from "./mesh-utils.ts";
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { loadSTLGeometry } from './mesh-utils.ts';
 
 export const useOrbitCanvas = (canvasWidth: number, canvasHeight: number) => {
   const ratio = canvasWidth / canvasHeight;

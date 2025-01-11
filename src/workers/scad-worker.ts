@@ -1,5 +1,5 @@
 // @ts-expect-error
-import OpenSCAD from "../openscad.js";
+import OpenSCAD from '../openscad.js';
 
 onmessage = async (e) => {
   const { scadSrc, toFixStl, goldStl } = e.data;
@@ -9,7 +9,7 @@ onmessage = async (e) => {
 
   try {
     await (async () => {
-      const filename = "fixed.stl";
+      const filename = 'fixed.stl';
 
       // Instantiate the application
       const instance = await OpenSCAD({
@@ -25,34 +25,34 @@ onmessage = async (e) => {
       // toWrite = 'import("/toFix.stl");';
 
       // Write a file to the filesystem
-      instance.FS.writeFile("/input.scad", toWrite);
-      instance.FS.writeFile("/gold.stl", new Uint8Array(goldStl), {}, "wb");
-      instance.FS.writeFile("/toFix.stl", new Uint8Array(toFixStl), {}, "wb");
+      instance.FS.writeFile('/input.scad', toWrite);
+      instance.FS.writeFile('/gold.stl', new Uint8Array(goldStl), {}, 'wb');
+      instance.FS.writeFile('/toFix.stl', new Uint8Array(toFixStl), {}, 'wb');
 
       // Run like a command-line program with arguments
       // instance.callMain(["/input.scad", "--enable=manifold", "-o", filename]); // manifold is faster at rendering
       console.log(1);
 
       instance.callMain([
-        "/input.scad",
-        "--enable=manifold",
+        '/input.scad',
+        '--enable=manifold',
         // "--enable=assimp",
-        "-o",
+        '-o',
         filename,
       ]); // manifold is faster at rendering
       console.log(2);
 
       // Read the output 3D-model into a JS byte-array
-      const output = instance.FS.readFile("/" + filename);
+      const output = instance.FS.readFile('/' + filename);
 
       postMessage({
-        type: "success",
-        blob: new Blob([output], { type: "application/octet-stream" }),
+        type: 'success',
+        blob: new Blob([output], { type: 'application/octet-stream' }),
       });
     })();
   } catch (e) {
     const error = {
-      type: "error",
+      type: 'error',
       messages: errorStatements,
     };
     postMessage(error);

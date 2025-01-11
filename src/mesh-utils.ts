@@ -1,5 +1,5 @@
-import { BufferGeometry } from "three";
-import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
+import { BufferGeometry } from 'three';
+import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 
 export const loadSTLGeometry = async (url: string) => {
   return new Promise<BufferGeometry>((resolve, reject) => {

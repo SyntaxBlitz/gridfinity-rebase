@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
 export const useLoadInputFileBlob = (
   inputFile: File | null,
@@ -15,7 +15,7 @@ export const useLoadInputFileBlob = (
       const inputFileBuffer = await inputFile.arrayBuffer();
 
       const inputFileBlob = new Blob([inputFileBuffer], {
-        type: "application/octet-stream",
+        type: 'application/octet-stream',
       });
 
       if (aborted) {
