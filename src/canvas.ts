@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -70,6 +70,8 @@ export const useRenderBlob = (
   inputBlob: Blob | null,
   sceneRef: React.RefObject<THREE.Scene | null>
 ) => {
+  const [renderReady, setRenderReady] = useState(false);
+
   useEffect(() => {
     if (!inputBlob) {
       if (sceneRef.current) {
@@ -80,6 +82,7 @@ export const useRenderBlob = (
     }
 
     let aborted = false;
+    setRenderReady(false); // otherwise the scene clear races against the shape render
 
     (async () => {
       const inputFileBlobUrl = URL.createObjectURL(inputBlob);
@@ -270,10 +273,14 @@ export const useRenderBlob = (
       if (sceneRef.current) {
         // sceneRef.current.fog = new THREE.Fog(0xffffff, 1, 1000);
       }
+
+      setRenderReady(true);
     })();
 
     return () => {
       aborted = true;
     };
   }, [inputBlob, sceneRef.current]);
+
+  return renderReady;
 };

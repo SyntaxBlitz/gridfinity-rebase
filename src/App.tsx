@@ -335,9 +335,9 @@ function App() {
     CANVAS_HEIGHT
   );
 
-  useRenderBlob(toFixInputBlob, toFixSceneRef);
+  const inputRenderReady = useRenderBlob(toFixInputBlob, toFixSceneRef);
   useLoadInputFileBlob(toFixInputFile, setToFixInputBlob);
-  useRenderBlob(goldInputBlob, goldSceneRef);
+  const goldRenderReady = useRenderBlob(goldInputBlob, goldSceneRef);
   useLoadInputFileBlob(goldInputFile, setGoldInputBlob);
   useRenderBlob(fixedBlob, fixedSceneRef);
 
@@ -399,8 +399,11 @@ function App() {
   }, [setGoldInputFile]);
 
   useEffect(() => {
+    if (!inputRenderReady || !goldRenderReady) {
+      return;
+    }
     run();
-  }, [toFixInputBlob, goldInputBlob]);
+  }, [toFixInputBlob, goldInputBlob, inputRenderReady, goldRenderReady]);
 
   const run = useCallback(async () => {
     if (!toFixInputBlob || !goldInputBlob) {
@@ -430,9 +433,13 @@ function App() {
       new Promise<Font>((resolve) => {
         // todo we've massively over-imported open sans characters
         // https://gero3.github.io/facetype.js/
-        new FontLoader().load('open-sans.json', resolve);
+        new FontLoader().load('open-sans-numerals.json', resolve);
       }),
     ]);
+
+    if (thisAbortRun.aborted) {
+      return;
+    }
 
     // todo: do these after loading each individual model, rather than as part of run()
     // this seems fast enough. we could do it in a worker if it were causing problems
@@ -446,10 +453,6 @@ function App() {
     const firstGoldShape = goldShapes[0];
 
     renderFirstGoldShape(firstGoldShape, goldRotation, goldSceneRef, openSans);
-
-    if (thisAbortRun.aborted) {
-      return;
-    }
 
     setDetections({
       shapeCount: shapes.length,
@@ -470,14 +473,15 @@ function App() {
       rotation,
       firstGoldShape,
       goldZMin,
-      // todo use gold rotation
       goldRotation
     );
     // console.log(scadSrc);
     scadRef.current = scadSrc;
 
-    const toFixBuffer = await toFixInputBlob.arrayBuffer();
-    const goldBuffer = await goldInputBlob.arrayBuffer();
+    const [toFixBuffer, goldBuffer] = await Promise.all([
+      toFixInputBlob.arrayBuffer(),
+      goldInputBlob.arrayBuffer(),
+    ]);
 
     const { blob, errors } = await runOpenSCAD(
       scadRef.current!,

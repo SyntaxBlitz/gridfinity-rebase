@@ -23,6 +23,7 @@
 - add a default prefab at least
 
 - could render numbers a bit better when rotated 90
+- refactors, cleanups (make app.tsx small)
 
 \*- what doesn't work? (out of scope)
 \*- 'magnets only on corners' -- every base needs to be the same

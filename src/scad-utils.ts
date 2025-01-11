@@ -11,7 +11,6 @@ export const initSCADWorker = () => {
   });
 };
 
-// todo: get the positioning for the gold stl as well
 export const generateScadForShapes = (
   shapes: Shape[],
   zMin: number,

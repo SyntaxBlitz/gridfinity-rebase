@@ -16,14 +16,15 @@ export function Intro() {
         <Link
           href="https://gridfinity.tools/"
           sx={{
-            color: '#777',
             textDecoration: 'none',
             '&:hover': {
               textDecoration: 'underline',
+              textDecorationColor: '#777',
             },
           }}
         >
-          gridfinity.tools/
+          {/* i think this is some emotion weirdness */}
+          <span style={{ color: '#777' }}>gridfinity.tools/</span>
         </Link>
       </Box>
       <Stack
