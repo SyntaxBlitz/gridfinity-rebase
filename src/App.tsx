@@ -530,6 +530,7 @@ function App() {
                 sx={{
                   border: '1px solid #ddd',
                   display: 'flex',
+                  userSelect: 'none',
                 }}
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -607,6 +608,7 @@ function App() {
                 sx={{
                   border: '1px solid #ddd',
                   display: 'flex',
+                  userSelect: 'none',
                 }}
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -708,6 +710,7 @@ function App() {
                 sx={{
                   border: '1px solid #ddd',
                   display: 'flex',
+                  userSelect: 'none',
                 }}
               >
                 {scadLoading ? (
