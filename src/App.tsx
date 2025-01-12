@@ -79,6 +79,13 @@ const openDb = async () => {
   });
 };
 
+const hasError = (blob: Blob | null, errors: string[] | null) =>
+  // we attempted a run, got output, but a null blob
+  (errors && blob === null) ||
+  // even if we got a blob, there's an error in the output
+  // e.g. non-manifold mesh
+  (errors?.some((e) => e.includes('ERROR:')) ?? false);
+
 function Symbol({ symbol }: { symbol: string }) {
   return (
     <Box
@@ -527,14 +534,14 @@ function App() {
     setFixedBlob(blob);
     setScadError(errors);
     setScadLoading(false);
+
+    if (hasError(blob, errors)) {
+      // @ts-ignore
+      window.plausible('run-error');
+    }
   }, [toFixInputBlob, goldInputBlob, setScadLoading, setScadError]);
 
-  const showScadError =
-    // we attempted a run, got output, but a null blob
-    (scadError && fixedBlob === null) ||
-    // even if we got a blob, there's an error in the output
-    // e.g. non-manifold mesh
-    (scadError?.some((e) => e.includes('ERROR:')) ?? false);
+  const showScadError = hasError(fixedBlob, scadError);
 
   return (
     <ThemeProvider theme={theme}>
