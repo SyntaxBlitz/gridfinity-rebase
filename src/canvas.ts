@@ -29,9 +29,13 @@ export const useOrbitCanvas = (canvasWidth: number, canvasHeight: number) => {
 
     const controls = new OrbitControls(camera, canvas);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
+    controls.dampingFactor = 0.1;
     controls.autoRotate = true;
     controls.autoRotateSpeed = 2;
+    controls.addEventListener('start', () => {
+      controls.autoRotate = false;
+      // this will restart automatically after the controls get reset. event listener stays
+    });
 
     scene.userData = {
       camera,
