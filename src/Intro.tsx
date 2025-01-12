@@ -152,9 +152,8 @@ export function Intro({
           <Box>
             In some circumstances, you might want to turn off the automatic
             rotation detection (e.g. when using bases with a nonstandard bottom
-            size, like <a href="https://snapfit.nl/">Snapfit</a>). Using the
-            following controls will make the tool “trust” the rotation of the
-            input files, even if the bases don't look right.
+            size). Using the following controls will make the tool “trust” the
+            rotation of the input files, even if the bases don't look right.
           </Box>
 
           <Stack direction="column" alignItems="flex-start" alignSelf="center">
