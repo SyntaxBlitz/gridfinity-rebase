@@ -145,12 +145,22 @@ function Dropzone({ text, shown }: { text: string; shown: boolean }) {
   );
 }
 
+const clearShapes = (scene: THREE.Scene) => {
+  scene.children
+    .filter((child) => child.userData.type === 'shape')
+    .forEach((child) => {
+      scene.remove(child);
+    });
+};
+
 const renderShapes = (
   shapes: THREE.Shape[],
   rotation: { geometry: THREE.BufferGeometry; rotationMatrix: THREE.Matrix4 },
   toFixSceneRef: React.MutableRefObject<THREE.Scene | null>,
   openSans: Font
 ) => {
+  toFixSceneRef.current && clearShapes(toFixSceneRef.current);
+
   shapes.forEach((shape, i) => {
     const shapeGeometry = new THREE.ShapeGeometry(shape);
     const zMin = getZMinForGeometry(rotation.geometry!);
@@ -167,6 +177,7 @@ const renderShapes = (
       depthWrite: false,
     });
     const shapeMesh = new THREE.Mesh(shapeGeometry, shapeMaterial);
+    shapeMesh.userData.type = 'shape';
     shapeMesh.renderOrder = 999;
     toFixSceneRef.current?.add(shapeMesh);
 
@@ -224,6 +235,8 @@ const renderFirstGoldShape = (
   goldSceneRef: React.MutableRefObject<THREE.Scene | null>,
   openSans: Font
 ) => {
+  goldSceneRef.current && clearShapes(goldSceneRef.current);
+
   const shapeGeometry = new THREE.ShapeGeometry(shape);
   const zMin = getZMinForGeometry(rotation.geometry!);
 
@@ -239,7 +252,10 @@ const renderFirstGoldShape = (
     depthWrite: false,
   });
   const shapeMesh = new THREE.Mesh(shapeGeometry, shapeMaterial);
+  shapeMesh.userData.type = 'shape';
+
   shapeMesh.renderOrder = 999;
+
   goldSceneRef.current?.add(shapeMesh);
 
   // add a floating number for each one
@@ -385,7 +401,9 @@ function App() {
       let blob = await db.get('files', 'gold.stl');
 
       if (!blob) {
-        blob = await loadFileAsBlob('default-gold-refined-3.stl');
+        blob = await loadFileAsBlob(
+          `${import.meta.env.BASE_URL}/default-gold-refined-3.stl`
+        );
       }
 
       if (abortGoldLoad) {
