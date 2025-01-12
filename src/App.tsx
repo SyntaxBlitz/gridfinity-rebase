@@ -428,6 +428,10 @@ function App() {
       return;
     }
 
+    // @ts-ignore
+    window.plausible('start-run');
+    const startTime = Date.now();
+
     // TODO actually abort running workers so they're not spinning
     if (lastAbortRun) {
       lastAbortRun.aborted = true;
@@ -507,6 +511,14 @@ function App() {
       toFixBuffer,
       goldBuffer
     );
+
+    const endTime = Date.now();
+    // @ts-ignore
+    window.plausible('finish-run', {
+      props: {
+        duration: endTime - startTime,
+      },
+    });
 
     if (thisAbortRun.aborted) {
       return;
