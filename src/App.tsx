@@ -512,6 +512,8 @@ function App() {
         <Stack width="100%" spacing={6} alignItems="center" py={6} mb={10}>
           <Intro />
 
+          {/* <h1 style={{ marginBottom: -12 }}>gridfinity.tools/rebase</h1> */}
+
           <Stack
             alignItems={'center'}
             sx={{
@@ -565,6 +567,7 @@ function App() {
                     sx={{ backgroundColor: 'white' }}
                     variant="outlined"
                     onClick={() => toFixInputRef.current?.click()}
+                    aria-label="Choose file to fix"
                   >
                     Choose File
                   </Button>
@@ -646,6 +649,7 @@ function App() {
                     sx={{ backgroundColor: 'white' }}
                     variant="outlined"
                     onClick={() => goldInputRef.current?.click()}
+                    aria-label="Choose file with a replacement base"
                   >
                     Choose File
                   </Button>
@@ -701,11 +705,22 @@ function App() {
                     ) : null}
                     <Alert severity="info">
                       {goldDetections.shapeCount === 1 ? (
-                        <>Found a base to use.</>
+                        <>
+                          <span aria-hidden>Found a base to use.</span>
+                          <span className="sr-only">
+                            Found a replacement base to use.
+                          </span>
+                        </>
                       ) : (
                         <>
-                          Found {goldDetections.shapeCount} bases. I'll just use
-                          the first one I saw.
+                          <span aria-hidden>
+                            Found {goldDetections.shapeCount} bases. I'll just
+                            use the first one I saw.
+                          </span>
+                          <span className="sr-only">
+                            Found {goldDetections.shapeCount} bases in the
+                            replacement file. I'll just use the first one I saw.
+                          </span>
                         </>
                       )}
                     </Alert>
@@ -723,31 +738,34 @@ function App() {
                   userSelect: 'none',
                 }}
               >
-                {scadLoading ? (
-                  <Stack
-                    spacing={4}
-                    aria-live="polite"
-                    sx={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: '100%',
-                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexDirection: 'column',
-                      boxSizing: 'border-box',
-                      padding: 2,
-                      zIndex: 1,
-                    }}
-                  >
-                    <Box>Calculating rebased STL. This can take some time!</Box>
-                    {/* <LinearProgress /> */}
-                    <CircularProgress />
-                  </Stack>
-                ) : null}
+                <Box aria-live="polite">
+                  {scadLoading ? (
+                    <Stack
+                      spacing={4}
+                      sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexDirection: 'column',
+                        boxSizing: 'border-box',
+                        padding: 2,
+                        zIndex: 1,
+                      }}
+                    >
+                      <Box>
+                        Calculating rebased STL. This can take some time!
+                      </Box>
+                      {/* <LinearProgress /> */}
+                      <CircularProgress />
+                    </Stack>
+                  ) : null}
+                </Box>
                 <Stack
                   sx={{
                     position: 'absolute',
