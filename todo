@@ -1,14 +1,6 @@
-\*- STL preview of the final result?
-
-\*- automatically start processing asap
-
 - try harder to find a progress bar
   - man i did try harder but even openscad-playground doesn't have one
-    \*- automatically find a grid in gold
-    \*- warn if multiple
-    \*- even the rotation would be reasonable
 - maybe avoid saving gold if too big? not a huge deal since it's async now
-  \*- show the identified/chosen base
 - abort scad on reupload (or just disable reupload?)
 - garbage collect openscad so we don't oom
   (or, i dunno, reuse it?)
@@ -17,19 +9,10 @@
 
   - but this isn't super high-priority. i think most users have one preference, and it'll stick in their localstorage. this isn't really an 'exploratory' tool where you get to look at all the options. wrong ui for that anyway.
 
-- warn on badness
-  \*- preload openscad.wasm (57MB, damn)
-- find a better way to keep the instance in memory if possible instead of making a new one each time
-- add a default prefab at least
+#2 warn on badness
+
+- find a better way to keep the openscad instance in memory if possible instead of making a new one each time
 
 - could render numbers a bit better when rotated 90
+  - maybe those little circle triangle pointer guys?
 - refactors, cleanups (make app.tsx small)
-
-\*- what doesn't work? (out of scope)
-\*- 'magnets only on corners' -- every base needs to be the same
-\*- but you can always just. not put magnets in those corners!
-_- half-pitch gridfinity
-_- non-42mm gridfinity
-_- STLs not in millimeters
-_- STL mesh not manifold
-\*- eco bins
