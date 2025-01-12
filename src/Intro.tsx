@@ -1,8 +1,25 @@
-import { Box, Button, Link, Stack } from '@mui/material';
+import {
+  Box,
+  Button,
+  FormControlLabel,
+  Link,
+  Stack,
+  Switch,
+} from '@mui/material';
 import { useState } from 'react';
 import { TipButton } from './tip-button/TipButton.tsx';
 
-export function Intro() {
+export function Intro({
+  bypassRotationForInputFile,
+  setBypassRotationForInputFile,
+  bypassRotationForGoldFile,
+  setBypassRotationForGoldFile,
+}: {
+  bypassRotationForInputFile: boolean;
+  setBypassRotationForInputFile: (bypass: boolean) => void;
+  bypassRotationForGoldFile: boolean;
+  setBypassRotationForGoldFile: (bypass: boolean) => void;
+}) {
   const [moreInfoExpanded, setMoreInfoExpanded] = useState(false);
 
   return (
@@ -131,6 +148,49 @@ export function Intro() {
           180 degrees. If you find a module out in the wild that doesn't work,{' '}
           <a href="mailto:me@timothyaveni.com">let me know</a> about it!
         </Box>
+        <Stack spacing={2}>
+          <Box>
+            In some circumstances, you might want to turn off the automatic
+            rotation detection (e.g. when using bases with a nonstandard bottom
+            size, like <a href="https://snapfit.nl/">Snapfit</a>). Using the
+            following controls will make the tool “trust” the rotation of the
+            input files, even if the bases don't look right.
+          </Box>
+
+          <Stack direction="column" alignItems="flex-start" alignSelf="center">
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={!bypassRotationForInputFile}
+                  onChange={(e) =>
+                    setBypassRotationForInputFile(!e.target.checked)
+                  }
+                />
+              }
+              label={
+                <>
+                  Rotation detection for <strong>input file</strong>
+                </>
+              }
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={!bypassRotationForGoldFile}
+                  onChange={(e) =>
+                    setBypassRotationForGoldFile(!e.target.checked)
+                  }
+                />
+              }
+              label={
+                <>
+                  Rotation detection for <strong>replacement base</strong>
+                </>
+              }
+            />
+          </Stack>
+        </Stack>
+
         <h3>How does OpenSCAD run in the browser?</h3>
         <Box>
           I used Olivier Chafik's excellent{' '}

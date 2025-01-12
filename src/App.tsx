@@ -19,6 +19,7 @@ import { Font, FontLoader } from 'three/addons/loaders/FontLoader.js';
 // import { ConvexHull } from "three/examples/jsm/math/ConvexHull.js";
 import { useOrbitCanvas, useRenderBlob } from './canvas.ts';
 import { useLoadInputFileBlob } from './file-utils.ts';
+import { useLocalStorageValue } from './hooks.ts';
 import {
   getBestShapeHullsForGeometry,
   getZMinForGeometry,
@@ -326,6 +327,11 @@ function App() {
   const [goldInputFile, setGoldInputFile] = useState<File | null>(null);
   const [goldInputBlob, setGoldInputBlob] = useState<Blob | null>(null);
 
+  const [bypassRotationForInputFile, setBypassRotationForInputFile] =
+    useLocalStorageValue('gridfinity-rebase-bypassRotationForInputFile', false);
+  const [bypassRotationForGoldFile, setBypassRotationForGoldFile] =
+    useLocalStorageValue('gridfinity-rebase-bypassRotationForGoldFile', false);
+
   const [fixedBlob, setFixedBlob] = useState<Blob | null>(null);
 
   const [draggingToFix, setDraggingToFix] = useState<boolean>(false);
@@ -473,12 +479,15 @@ function App() {
 
     // todo: do these after loading each individual model, rather than as part of run()
     // this seems fast enough. we could do it in a worker if it were causing problems
-    const { shapes, rotation } = getBestShapeHullsForGeometry(meshGeometry);
+    const { shapes, rotation } = getBestShapeHullsForGeometry(
+      meshGeometry,
+      bypassRotationForInputFile
+    );
 
     renderShapes(shapes, rotation, toFixSceneRef, openSans);
 
     const { shapes: goldShapes, rotation: goldRotation } =
-      getBestShapeHullsForGeometry(goldGeometry);
+      getBestShapeHullsForGeometry(goldGeometry, bypassRotationForGoldFile);
 
     const firstGoldShape = goldShapes[0];
 
@@ -539,7 +548,14 @@ function App() {
       // @ts-ignore
       window.plausible('run-error');
     }
-  }, [toFixInputBlob, goldInputBlob, setScadLoading, setScadError]);
+  }, [
+    toFixInputBlob,
+    goldInputBlob,
+    setScadLoading,
+    setScadError,
+    bypassRotationForInputFile,
+    bypassRotationForGoldFile,
+  ]);
 
   const showScadError = hasError(fixedBlob, scadError);
 
@@ -547,7 +563,12 @@ function App() {
     <ThemeProvider theme={theme}>
       <Box sx={{ containerType: 'size' }}>
         <Stack width="100%" spacing={6} alignItems="center" py={6} mb={10}>
-          <Intro />
+          <Intro
+            bypassRotationForInputFile={bypassRotationForInputFile}
+            setBypassRotationForInputFile={setBypassRotationForInputFile}
+            bypassRotationForGoldFile={bypassRotationForGoldFile}
+            setBypassRotationForGoldFile={setBypassRotationForGoldFile}
+          />
 
           {/* <h1 style={{ marginBottom: -12 }}>gridfinity.tools/rebase</h1> */}
 

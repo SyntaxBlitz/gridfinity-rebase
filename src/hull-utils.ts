@@ -152,7 +152,8 @@ const isHullBad = (island: Shape) => {
 export type RotationType = 'original' | 'x+' | 'x-' | 'y+' | 'y-' | '180';
 
 export const getBestShapeHullsForGeometry = (
-  meshGeometry: BufferGeometry
+  meshGeometry: BufferGeometry,
+  bypassRotationCheck: boolean = false
 ): {
   badness: number;
   shapes: Shape[];
@@ -162,7 +163,7 @@ export const getBestShapeHullsForGeometry = (
     rotationMatrix: Matrix4;
   };
 } => {
-  const rotations = [
+  let rotations = [
     {
       type: 'original',
       geometry: meshGeometry,
@@ -198,6 +199,10 @@ export const getBestShapeHullsForGeometry = (
   for (const rotation of rotations) {
     rotation.geometry = meshGeometry.clone();
     rotation.geometry.applyMatrix4(rotation.rotationMatrix);
+  }
+
+  if (bypassRotationCheck) {
+    rotations = [rotations[0]];
   }
 
   let best: ReturnType<typeof getBestShapeHullsForGeometry> | null = null;
