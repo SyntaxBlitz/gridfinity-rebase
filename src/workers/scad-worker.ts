@@ -17,13 +17,14 @@ const initializeInstance = () => {
       if (self.location.origin === 'https://gridfinity.tools') {
         // if you're hosting this app elsewhere, please host the
         // wasm file yourself - it's a big file! -tim
-        return 'https://tja-project-files.rgdata.net/openscad-2024.08.22.wasm';
+        return 'https://tja-project-files.rgdata.net/openscad-2025.01.12.wasm';
       } else {
         const importMetaUrl = import.meta.env.BASE_URL;
         return `${importMetaUrl}/src/openscad.wasm`;
       }
     },
   }).then((instance: OpenSCAD) => {
+    // note i think this is superfluous because of some code in openscad-wasm
     return instance.ready;
   });
 };
@@ -40,6 +41,8 @@ const initializeInstance = () => {
 // they're probably not actually using the tool anyway. If they are, their first (pre-cache)
 // use can wait until interaction.
 // (oh it's only 17MB zstd but still)
+// update 2025-01-12 -- I just did my own build and it's tiny! 9.4MB uncompressed. has all the features I need.
+// this version is dramatically faster, too. not sure what changed! (about 7s to 1.5s runtime on a test file)
 const isOnMobile = navigator.userAgent.toLowerCase().includes('mobi');
 if (!isOnMobile) {
   initializeInstance();
@@ -90,9 +93,7 @@ const rebase = async (data: {
         // manifold is faster at rendering.
         // one cost i see is sometimes weird vertex orders in the final model, but i don't think it matters for printing.
         // it's WAY faster -- like one or two orders of magnitude -- so it's worth it
-        '--enable=manifold',
-        // '--enable=fast-csg',
-        // "--enable=assimp",
+        '--backend=manifold',
         '-o',
         `/fixed.stl`,
       ]);
@@ -107,6 +108,8 @@ const rebase = async (data: {
       });
     })();
   } catch (e) {
+    console.error(e);
+
     postMessage({
       type: 'finished',
       errors: errorStatements,
