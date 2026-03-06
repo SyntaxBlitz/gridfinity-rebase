@@ -127,26 +127,91 @@ export const getShapeHullsForGeometry = (
   return islandGeometries;
 };
 
-const expected = 35.6;
+// Standard Gridfinity: 42mm pitch, 35.6mm hull (42 - 2*3.2mm margin)
+// Half-pitch Gridfinity: 21mm pitch, 14.6mm hull (21 - 2*3.2mm margin)
+const EXPECTED_STANDARD = 35.6;
+const EXPECTED_HALF = 14.6;
 const badnessThreshold = 1;
 
-const isHullBad = (island: Shape) => {
-  const points = island.extractPoints(1).shape;
+export type BaseSize = 'standard' | 'half';
 
+const getHullAvgSize = (island: Shape) => {
+  const points = island.extractPoints(1).shape;
   const minX = Math.min(...points.map((v) => v.x));
   const maxX = Math.max(...points.map((v) => v.x));
   const minY = Math.min(...points.map((v) => v.y));
   const maxY = Math.max(...points.map((v) => v.y));
+  return ((maxX - minX) + (maxY - minY)) / 2;
+};
 
-  const width = maxX - minX;
-  const height = maxY - minY;
-
-  // console.log({ width, height });
-
+const isHullBad = (island: Shape) => {
+  const avg = getHullAvgSize(island);
   return (
-    Math.abs(width - expected) > badnessThreshold ||
-    Math.abs(height - expected) > badnessThreshold
+    Math.abs(avg - EXPECTED_STANDARD) > badnessThreshold &&
+    Math.abs(avg - EXPECTED_HALF) > badnessThreshold
   );
+};
+
+export const detectBaseSize = (shapes: Shape[]): BaseSize => {
+  if (shapes.length === 0) return 'standard';
+  const avg = shapes.reduce((sum, s) => sum + getHullAvgSize(s), 0) / shapes.length;
+  return Math.abs(avg - EXPECTED_HALF) < Math.abs(avg - EXPECTED_STANDARD) ? 'half' : 'standard';
+};
+
+// Cluster a list of 1D values: nearby values (within `threshold`) are averaged into one.
+const clusterValues = (values: number[], threshold = 10): number[] => {
+  const sorted = [...values].sort((a, b) => a - b);
+  const clusters: number[] = [];
+  let group: number[] = [];
+
+  for (const v of sorted) {
+    if (group.length === 0 || v - group[group.length - 1] < threshold) {
+      group.push(v);
+    } else {
+      clusters.push(group.reduce((a, b) => a + b) / group.length);
+      group = [v];
+    }
+  }
+  if (group.length > 0) clusters.push(group.reduce((a, b) => a + b) / group.length);
+
+  return clusters;
+};
+
+// Pairs up consecutive values and returns their midpoints: [a, b, c, d] → [(a+b)/2, (c+d)/2]
+const midpointsOfPairs = (values: number[]): number[] => {
+  const result: number[] = [];
+  for (let i = 0; i < values.length; i += 2) {
+    if (i + 1 < values.length) {
+      result.push((values[i] + values[i + 1]) / 2);
+    } else {
+      result.push(values[i]); // odd column/row — leave as-is
+    }
+  }
+  return result;
+};
+
+/**
+ * Groups half-pitch shape centroids into 2×2 clusters and returns the center
+ * of each cluster. Each cluster maps to one full-pitch Gridfinity base.
+ */
+export const groupHalfSizeShapesIntoFullPitchCenters = (
+  shapes: Shape[]
+): [number, number][] => {
+  const centroids = shapes.map(getShapeBoundingBoxCentroid);
+
+  const uniqueX = clusterValues(centroids.map((c) => c[0])).sort((a, b) => a - b);
+  const uniqueY = clusterValues(centroids.map((c) => c[1])).sort((a, b) => a - b);
+
+  const groupCentersX = midpointsOfPairs(uniqueX);
+  const groupCentersY = midpointsOfPairs(uniqueY);
+
+  const centers: [number, number][] = [];
+  for (const cx of groupCentersX) {
+    for (const cy of groupCentersY) {
+      centers.push([cx, cy]);
+    }
+  }
+  return centers;
 };
 
 export type RotationType = 'original' | 'x+' | 'x-' | 'y+' | 'y-' | '180';

@@ -21,8 +21,11 @@ import { useOrbitCanvas, useRenderBlob } from './canvas.ts';
 import { useLoadInputFileBlob } from './file-utils.ts';
 import { useLocalStorageValue } from './hooks.ts';
 import {
+  BaseSize,
+  detectBaseSize,
   getBestShapeHullsForGeometry,
   getZMinForGeometry,
+  groupHalfSizeShapesIntoFullPitchCenters,
   RotationType,
 } from './hull-utils.ts';
 import { Intro } from './Intro.tsx';
@@ -343,6 +346,8 @@ function App() {
   const [detections, setDetections] = useState<null | {
     shapeCount: number;
     rotation: RotationType;
+    baseSize: BaseSize;
+    groupedCount: number | null;
   }>(null);
   const [goldDetections, setGoldDetections] = useState<null | {
     shapeCount: number;
@@ -493,9 +498,17 @@ function App() {
 
     renderFirstGoldShape(firstGoldShape, goldRotation, goldSceneRef, openSans);
 
+    const baseSize = detectBaseSize(shapes);
+    const groupedCount =
+      baseSize === 'half'
+        ? groupHalfSizeShapesIntoFullPitchCenters(shapes).length
+        : null;
+
     setDetections({
       shapeCount: shapes.length,
       rotation: rotation.type,
+      baseSize,
+      groupedCount,
     });
 
     setGoldDetections({
@@ -512,7 +525,8 @@ function App() {
       rotation,
       firstGoldShape,
       goldZMin,
-      goldRotation
+      goldRotation,
+      baseSize
     );
     // console.log(scadSrc);
     scadRef.current = scadSrc;
@@ -656,8 +670,18 @@ function App() {
                       </Alert>
                     ) : null}
                     <Alert severity="info">
-                      Detected {detections.shapeCount} base
-                      {detections.shapeCount === 1 ? '' : 's'} to replace.
+                      {detections.groupedCount !== null ? (
+                        <>
+                          Detected {detections.shapeCount} half-pitch bases
+                          — grouping into {detections.groupedCount} full-pitch base
+                          {detections.groupedCount === 1 ? '' : 's'}.
+                        </>
+                      ) : (
+                        <>
+                          Detected {detections.shapeCount} base
+                          {detections.shapeCount === 1 ? '' : 's'} to replace.
+                        </>
+                      )}
                     </Alert>
                   </>
                 )}

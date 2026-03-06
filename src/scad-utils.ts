@@ -1,5 +1,10 @@
 import { Shape } from 'three';
-import { getShapeBoundingBoxCentroid, RotationType } from './hull-utils.ts';
+import {
+  BaseSize,
+  getShapeBoundingBoxCentroid,
+  groupHalfSizeShapesIntoFullPitchCenters,
+  RotationType,
+} from './hull-utils.ts';
 
 import { v4 as uuidv4 } from 'uuid';
 
@@ -21,19 +26,28 @@ export const generateScadForShapes = (
   goldZMin: number,
   goldRotation: {
     type: RotationType;
-  }
+  },
+  baseSize: BaseSize = 'standard'
 ) => {
-  const centers = shapes.map((shape) => {
-    return getShapeBoundingBoxCentroid(shape);
-  });
+  // When the input uses half-pitch bases, group 2×2 clusters into one full-pitch
+  // center each, then cut with standard-size simple_cut().
+  const centers: [number, number][] =
+    baseSize === 'half'
+      ? groupHalfSizeShapesIntoFullPitchCenters(shapes)
+      : shapes.map((shape) => getShapeBoundingBoxCentroid(shape) as [number, number]);
 
   const goldCenter = getShapeBoundingBoxCentroid(goldShape);
   console.log({ goldCenter });
 
+  // Always use standard full-pitch cut dimensions (even when input is half-pitch,
+  // since we're replacing groups of 4 with one full-pitch base).
+  const outer = 42;
+  const inner = 34;
+
   return `
 module simple_cut() {
-    translate([-42 / 2, -42 / 2, 0]) cube([42, 42, 2.6]);
-    translate([-34 / 2, -34 / 2, 0]) cube([34, 34, 5.5]);
+    translate([-${outer} / 2, -${outer} / 2, 0]) cube([${outer}, ${outer}, 2.6]);
+    translate([-${inner} / 2, -${inner} / 2, 0]) cube([${inner}, ${inner}, 5.5]);
 }
 
 module preferred_bottom() {
