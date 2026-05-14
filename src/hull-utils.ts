@@ -12,8 +12,13 @@ import {
 // @ts-expect-error
 import UnionFind from 'union-find';
 
+
+export const DETECTION_THRESHOLD = 0.001;
+export const REFINED_THRESHOLD = 0.02;
+
 export const getShapeHullsForGeometry = (
-  meshGeometry: BufferGeometry
+  meshGeometry: BufferGeometry,
+  detectionThreshold: number = DETECTION_THRESHOLD,
 ): Shape[] => {
   const material = new MeshNormalMaterial();
   const mesh = new Mesh(meshGeometry, material);
@@ -44,9 +49,9 @@ export const getShapeHullsForGeometry = (
     vertexC.fromBufferAttribute(positionAttribute, i + 2);
 
     if (
-      Math.abs(vertexA.z - minZ) < 0.001 &&
-      Math.abs(vertexB.z - minZ) < 0.001 &&
-      Math.abs(vertexC.z - minZ) < 0.001
+      Math.abs(vertexA.z - minZ) < detectionThreshold &&
+      Math.abs(vertexB.z - minZ) < detectionThreshold &&
+      Math.abs(vertexC.z - minZ) < detectionThreshold
     ) {
       // Allow for some floating-point tolerance
       bottomFaces.push([
@@ -153,7 +158,8 @@ export type RotationType = 'original' | 'x+' | 'x-' | 'y+' | 'y-' | '180';
 
 export const getBestShapeHullsForGeometry = (
   meshGeometry: BufferGeometry,
-  bypassRotationCheck: boolean = false
+  bypassRotationCheck: boolean = false,
+  bottomDetectionThreshold: number = DETECTION_THRESHOLD,
 ): {
   badness: number;
   shapes: Shape[];
@@ -208,7 +214,7 @@ export const getBestShapeHullsForGeometry = (
   let best: ReturnType<typeof getBestShapeHullsForGeometry> | null = null;
 
   for (const rotation of rotations) {
-    const shapes = getShapeHullsForGeometry(rotation.geometry);
+    const shapes = getShapeHullsForGeometry(rotation.geometry, bottomDetectionThreshold);
     // console.log({ rotation, shapes });
     const badness = shapes.reduce((acc, shape) => {
       if (isHullBad(shape)) {

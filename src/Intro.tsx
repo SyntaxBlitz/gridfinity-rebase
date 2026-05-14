@@ -5,6 +5,7 @@ import {
   Link,
   Stack,
   Switch,
+  TextField,
 } from '@mui/material';
 import { useState } from 'react';
 import { TipButton } from './tip-button/TipButton.tsx';
@@ -14,11 +15,15 @@ export function Intro({
   setBypassRotationForInputFile,
   bypassRotationForGoldFile,
   setBypassRotationForGoldFile,
+  detectionThreshold,
+  setDetectionThreshold,
 }: {
   bypassRotationForInputFile: boolean;
   setBypassRotationForInputFile: (bypass: boolean) => void;
   bypassRotationForGoldFile: boolean;
   setBypassRotationForGoldFile: (bypass: boolean) => void;
+  detectionThreshold: number;
+  setDetectionThreshold: (threshold: number) => void;
 }) {
   const [moreInfoExpanded, setMoreInfoExpanded] = useState(false);
 
@@ -186,6 +191,17 @@ export function Intro({
                   Rotation detection for <strong>replacement base</strong>
                 </>
               }
+            />
+            <TextField
+              id="detectionThreshold"
+              label="Bottom detection threshold"
+              value={detectionThreshold}
+              type="number"
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                let n = Number(e.target.value);
+                setDetectionThreshold(n);
+              }}
+              slotProps={{ htmlInput: { "step": 0.001 } }}
             />
           </Stack>
         </Stack>
