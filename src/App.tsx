@@ -588,11 +588,11 @@ function App() {
     } else {
       return <>
         <span aria-hidden>
-          Found {found} bases. I'll just
+          Found {found.toString()} bases. I'll just
           use the first one I saw.
         </span>
         <span className="sr-only">
-          Found {found} bases in the
+          Found {found.toString()} bases in the
           replacement file. I'll just use the first one I saw.
         </span>
       </>
