@@ -6,6 +6,7 @@ import {
   Button,
   CircularProgress,
   createTheme,
+  Link,
   Stack,
   ThemeProvider,
 } from '@mui/material';
@@ -24,6 +25,7 @@ import {
   getBestShapeHullsForGeometry,
   getZMinForGeometry,
   RotationType,
+  REFINED_THRESHOLD
 } from './hull-utils.ts';
 import { Intro } from './Intro.tsx';
 import { loadSTLGeometry } from './mesh-utils.ts';
@@ -563,6 +565,40 @@ function App() {
 
   const showScadError = hasError(fixedBlob, scadError);
 
+  function goldInfo(found: Number) {
+
+
+    if (found === 1) {
+      return <>
+        <span aria-hidden>Found a base to use.</span>
+        <span className="sr-only">
+          Found a replacement base to use.
+        </span>
+      </>
+    } else if (found === 0) {
+      return <>
+        <span aria-hidden>
+          Found 0 bases. Using gridfinity refined? <Link component="button" onClick={() => { setDetectionThreshold(REFINED_THRESHOLD) }}>Increase Detection Threshold</Link>
+        </span>
+        <span className="sr-only">
+          Found 0 bases in the
+          replacement file. Using gridfinity refined? <Link component="button" onClick={() => { setDetectionThreshold(REFINED_THRESHOLD) }}>Increase Detection Threshold</Link>
+        </span>
+      </>
+    } else {
+      return <>
+        <span aria-hidden>
+          Found {found} bases. I'll just
+          use the first one I saw.
+        </span>
+        <span className="sr-only">
+          Found {found} bases in the
+          replacement file. I'll just use the first one I saw.
+        </span>
+      </>
+    }
+  }
+
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ containerType: 'size' }}>
@@ -768,25 +804,7 @@ function App() {
                       </Alert>
                     ) : null}
                     <Alert severity="info">
-                      {goldDetections.shapeCount === 1 ? (
-                        <>
-                          <span aria-hidden>Found a base to use.</span>
-                          <span className="sr-only">
-                            Found a replacement base to use.
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <span aria-hidden>
-                            Found {goldDetections.shapeCount} bases. I'll just
-                            use the first one I saw.
-                          </span>
-                          <span className="sr-only">
-                            Found {goldDetections.shapeCount} bases in the
-                            replacement file. I'll just use the first one I saw.
-                          </span>
-                        </>
-                      )}
+                      {goldInfo(goldDetections.shapeCount)}
                     </Alert>
                   </>
                 )}

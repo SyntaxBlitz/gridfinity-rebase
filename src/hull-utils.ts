@@ -13,7 +13,8 @@ import {
 import UnionFind from 'union-find';
 
 
-const DETECTION_THRESHOLD = 0.001;
+export const DETECTION_THRESHOLD = 0.001;
+export const REFINED_THRESHOLD = 0.02;
 
 export const getShapeHullsForGeometry = (
   meshGeometry: BufferGeometry,
