@@ -331,6 +331,8 @@ function App() {
     useLocalStorageValue('gridfinity-rebase-bypassRotationForInputFile', false);
   const [bypassRotationForGoldFile, setBypassRotationForGoldFile] =
     useLocalStorageValue('gridfinity-rebase-bypassRotationForGoldFile', false);
+  const [detectionThreshold, setDetectionThreshold] =
+    useLocalStorageValue('gridfinity-rebase-detectionThreshold', 0.001);
 
   const [fixedBlob, setFixedBlob] = useState<Blob | null>(null);
 
@@ -434,7 +436,7 @@ function App() {
       return;
     }
     run();
-  }, [toFixInputBlob, goldInputBlob, inputRenderReady, goldRenderReady]);
+  }, [toFixInputBlob, goldInputBlob, inputRenderReady, goldRenderReady, detectionThreshold]);
 
   const run = useCallback(async () => {
     if (!toFixInputBlob || !goldInputBlob) {
@@ -481,13 +483,14 @@ function App() {
     // this seems fast enough. we could do it in a worker if it were causing problems
     const { shapes, rotation } = getBestShapeHullsForGeometry(
       meshGeometry,
-      bypassRotationForInputFile
+      bypassRotationForInputFile,
+      detectionThreshold,
     );
 
     renderShapes(shapes, rotation, toFixSceneRef, openSans);
 
     const { shapes: goldShapes, rotation: goldRotation } =
-      getBestShapeHullsForGeometry(goldGeometry, bypassRotationForGoldFile);
+      getBestShapeHullsForGeometry(goldGeometry, bypassRotationForGoldFile, detectionThreshold);
 
     const firstGoldShape = goldShapes[0];
 
@@ -555,6 +558,7 @@ function App() {
     setScadError,
     bypassRotationForInputFile,
     bypassRotationForGoldFile,
+    detectionThreshold,
   ]);
 
   const showScadError = hasError(fixedBlob, scadError);
@@ -568,6 +572,8 @@ function App() {
             setBypassRotationForInputFile={setBypassRotationForInputFile}
             bypassRotationForGoldFile={bypassRotationForGoldFile}
             setBypassRotationForGoldFile={setBypassRotationForGoldFile}
+            detectionThreshold={detectionThreshold}
+            setDetectionThreshold={setDetectionThreshold}
           />
 
           {/* <h1 style={{ marginBottom: -12 }}>gridfinity.tools/rebase</h1> */}

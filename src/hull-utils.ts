@@ -157,7 +157,8 @@ export type RotationType = 'original' | 'x+' | 'x-' | 'y+' | 'y-' | '180';
 
 export const getBestShapeHullsForGeometry = (
   meshGeometry: BufferGeometry,
-  bypassRotationCheck: boolean = false
+  bypassRotationCheck: boolean = false,
+  bottomDetectionThreshold: number = DETECTION_THRESHOLD,
 ): {
   badness: number;
   shapes: Shape[];
@@ -212,7 +213,7 @@ export const getBestShapeHullsForGeometry = (
   let best: ReturnType<typeof getBestShapeHullsForGeometry> | null = null;
 
   for (const rotation of rotations) {
-    const shapes = getShapeHullsForGeometry(rotation.geometry);
+    const shapes = getShapeHullsForGeometry(rotation.geometry, bottomDetectionThreshold);
     // console.log({ rotation, shapes });
     const badness = shapes.reduce((acc, shape) => {
       if (isHullBad(shape)) {
