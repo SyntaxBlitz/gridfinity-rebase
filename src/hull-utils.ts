@@ -12,8 +12,12 @@ import {
 // @ts-expect-error
 import UnionFind from 'union-find';
 
+
+const DETECTION_THRESHOLD = 0.001;
+
 export const getShapeHullsForGeometry = (
-  meshGeometry: BufferGeometry
+  meshGeometry: BufferGeometry,
+  detectionThreshold: number = DETECTION_THRESHOLD,
 ): Shape[] => {
   const material = new MeshNormalMaterial();
   const mesh = new Mesh(meshGeometry, material);
@@ -44,9 +48,9 @@ export const getShapeHullsForGeometry = (
     vertexC.fromBufferAttribute(positionAttribute, i + 2);
 
     if (
-      Math.abs(vertexA.z - minZ) < 0.001 &&
-      Math.abs(vertexB.z - minZ) < 0.001 &&
-      Math.abs(vertexC.z - minZ) < 0.001
+      Math.abs(vertexA.z - minZ) < detectionThreshold &&
+      Math.abs(vertexB.z - minZ) < detectionThreshold &&
+      Math.abs(vertexC.z - minZ) < detectionThreshold
     ) {
       // Allow for some floating-point tolerance
       bottomFaces.push([
