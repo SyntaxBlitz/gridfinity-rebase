@@ -849,9 +849,9 @@ function App() {
                       download={
                         toFixInputFile
                           ? toFixInputFile.name.replace(
-                              /\.stl$/,
-                              '-rebased.stl'
-                            )
+                            /\.(stl|3mf)$/,
+                            '-rebased.stl'
+                          )
                           : 'rebased.stl'
                       }
                     >
