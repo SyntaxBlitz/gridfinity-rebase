@@ -633,7 +633,7 @@ function App() {
                 <input
                   className="sr-only"
                   type="file"
-                  accept=".stl"
+                  accept=".stl,.3mf"
                   ref={toFixInputRef}
                   onChange={(e) =>
                     setToFixInputFile(e.target.files?.[0] ?? null)
@@ -715,7 +715,7 @@ function App() {
                 <input
                   className="sr-only"
                   type="file"
-                  accept=".stl"
+                  accept=".stl,.3mf"
                   ref={goldInputRef}
                   onChange={(e) =>
                     setGoldInputFile(e.target.files?.[0] ?? null)
@@ -849,9 +849,9 @@ function App() {
                       download={
                         toFixInputFile
                           ? toFixInputFile.name.replace(
-                              /\.stl$/,
-                              '-rebased.stl'
-                            )
+                            /\.(stl|3mf)$/,
+                            '-rebased.stl'
+                          )
                           : 'rebased.stl'
                       }
                     >
