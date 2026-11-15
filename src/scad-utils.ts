@@ -85,8 +85,10 @@ const rotateSCADCodeForRotation = (type: RotationType): string => {
       return 'rotate([0, 90, 0])';
     case 'y-':
       return 'rotate([0, -90, 0])';
+    // the '180' candidate is built with makeRotationY(PI) in hull-utils, so
+    // the SCAD rotation must also be about Y, not Z
     case '180':
-      return 'rotate([0, 0, 180])';
+      return 'rotate([0, 180, 0])';
     default:
       return '';
   }
