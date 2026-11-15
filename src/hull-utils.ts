@@ -210,12 +210,17 @@ export const getBestShapeHullsForGeometry = (
   for (const rotation of rotations) {
     const shapes = getShapeHullsForGeometry(rotation.geometry);
     // console.log({ rotation, shapes });
-    const badness = shapes.reduce((acc, shape) => {
-      if (isHullBad(shape)) {
-        return acc + 1;
-      }
-      return acc;
-    }, 0);
+    // a rotation that finds no bottom faces at all must never beat one that
+    // found real bases, so it scores worst
+    const badness =
+      shapes.length === 0
+        ? Infinity
+        : shapes.reduce((acc, shape) => {
+            if (isHullBad(shape)) {
+              return acc + 1;
+            }
+            return acc;
+          }, 0);
 
     // console.log({ badness });
 
